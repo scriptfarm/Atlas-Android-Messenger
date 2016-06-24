@@ -42,7 +42,7 @@ public class App extends Application {
     private static Picasso sPicasso;
 
 
-    //==============================================================================================
+    //==============================================================================================amar
     // Application Overrides
     //==============================================================================================
 
@@ -142,7 +142,7 @@ public class App extends Application {
             LayerClient.Options options = new LayerClient.Options()
 
                     /* Fetch the minimum amount per conversation when first authenticated */
-                    .historicSyncPolicy(LayerClient.Options.HistoricSyncPolicy.FROM_LAST_MESSAGE)
+                    .historicSyncPolicy(LayerClient.Options.HistoricSyncPolicy.ALL_MESSAGES)
                     
                     /* Automatically download text and ThreePartImage info/preview */
                     .autoDownloadMimeTypes(Arrays.asList(
