@@ -14,7 +14,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.layer.atlas.AtlasAvatar;
-import com.layer.atlas.provider.Participant;
 import com.layer.atlas.util.Util;
 import com.layer.messenger.util.Log;
 import com.layer.sdk.LayerClient;
@@ -24,6 +23,7 @@ import com.layer.sdk.listeners.LayerAuthenticationListener;
 import com.layer.sdk.listeners.LayerChangeEventListener;
 import com.layer.sdk.listeners.LayerConnectionListener;
 import com.layer.sdk.messaging.Conversation;
+import com.layer.sdk.messaging.Identity;
 
 import java.util.List;
 
@@ -81,7 +81,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         mDiskUtilization = (TextView) findViewById(R.id.disk_utilization);
         mDiskAllowance = (TextView) findViewById(R.id.disk_allowance);
         mAutoDownloadMimeTypes = (TextView) findViewById(R.id.auto_download_mime_types);
-        mAvatar.init(getParticipantProvider(), getPicasso());
+        mAvatar.init(getPicasso());
 
         // Long-click copy-to-clipboard
         mUserName.setOnLongClickListener(this);
@@ -202,9 +202,13 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         if (!getLayerClient().isAuthenticated()) return;
 
         /* Account */
-        Participant participant = getParticipantProvider().getParticipant(getLayerClient().getAuthenticatedUserId());
-        mAvatar.setParticipants(getLayerClient().getAuthenticatedUserId());
-        mUserName.setText(participant.getName());
+        Identity currentUser = getLayerClient().getAuthenticatedUser();
+        mAvatar.setParticipants(currentUser);
+        if (currentUser != null) {
+            mUserName.setText(Util.getDisplayName(currentUser));
+        } else {
+            mUserName.setText(null);
+        }
         mUserState.setText(getLayerClient().isConnected() ? R.string.settings_content_connected : R.string.settings_content_disconnected);
 
         /* Notifications */
@@ -219,8 +223,13 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         mAtlasVersion.setText(Util.getVersion());
         mLayerVersion.setText(LayerClient.getVersion());
         mAndroidVersion.setText(getString(R.string.settings_content_android_version, Build.VERSION.RELEASE, Build.VERSION.SDK_INT));
-        mUserId.setText(getLayerClient().getAuthenticatedUserId());
-        
+
+        if (currentUser != null) {
+            mUserId.setText(currentUser.getUserId());
+        } else {
+            mUserId.setText(R.string.settings_not_authenticated);
+        }
+
         /* Statistics */
         long totalMessages = 0;
         long totalUnread = 0;

@@ -2,7 +2,6 @@ package com.layer.messenger.flavor;
 
 import android.content.Context;
 
-import com.layer.atlas.provider.ParticipantProvider;
 import com.layer.messenger.App;
 import com.layer.messenger.util.AuthenticationProvider;
 import com.layer.messenger.util.Log;
@@ -71,11 +70,6 @@ public class Flavor implements App.Flavor {
 
         options.googleCloudMessagingSenderId(GCM_SENDER_ID);
         return LayerClient.newInstance(context, appId, options);
-    }
-
-    @Override
-    public ParticipantProvider generateParticipantProvider(Context context, AuthenticationProvider authenticationProvider) {
-        return new DemoParticipantProvider(context).setLayerAppId(getLayerAppId());
     }
 
     @Override

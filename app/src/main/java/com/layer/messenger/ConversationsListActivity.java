@@ -15,6 +15,9 @@ import com.layer.sdk.LayerClient;
 import com.layer.sdk.messaging.Conversation;
 
 public class ConversationsListActivity extends BaseActivity {
+
+    private AtlasConversationsRecyclerView mConversationsList;
+
     public ConversationsListActivity() {
         super(R.layout.activity_conversations_list, R.menu.menu_conversations_list, R.string.title_conversations_list, false);
     }
@@ -27,10 +30,10 @@ public class ConversationsListActivity extends BaseActivity {
             return;
         }
 
-        final AtlasConversationsRecyclerView conversationsList = (AtlasConversationsRecyclerView) findViewById(R.id.conversations_list);
+        mConversationsList = (AtlasConversationsRecyclerView) findViewById(R.id.conversations_list);
 
         // Atlas methods
-        conversationsList.init(getLayerClient(), getParticipantProvider(), getPicasso())
+        mConversationsList.init(getLayerClient(), getPicasso())
                 .setInitialHistoricMessagesToFetch(20)
                 .setOnConversationClickListener(new AtlasConversationsAdapter.OnConversationClickListener() {
                     @Override
@@ -57,7 +60,7 @@ public class ConversationsListActivity extends BaseActivity {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         // TODO: simply update this one conversation
-                                        conversationsList.getAdapter().notifyDataSetChanged();
+                                        mConversationsList.getAdapter().notifyDataSetChanged();
                                         dialog.dismiss();
                                     }
                                 })
@@ -83,6 +86,14 @@ public class ConversationsListActivity extends BaseActivity {
                         startActivity(new Intent(ConversationsListActivity.this, MessagesListActivity.class));
                     }
                 });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mConversationsList != null) {
+            mConversationsList.onDestroy();
+        }
     }
 
     @Override

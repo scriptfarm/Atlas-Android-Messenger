@@ -6,7 +6,6 @@ import android.content.Context;
 
 import com.layer.atlas.messagetypes.text.TextCellFactory;
 import com.layer.atlas.messagetypes.threepartimage.ThreePartImageUtils;
-import com.layer.atlas.provider.ParticipantProvider;
 import com.layer.atlas.util.Util;
 import com.layer.atlas.util.picasso.requesthandlers.MessagePartRequestHandler;
 import com.layer.messenger.util.AuthenticationProvider;
@@ -27,7 +26,6 @@ import java.util.Arrays;
  * @see com.layer.messenger.App.Flavor
  * @see com.layer.messenger.flavor.Flavor
  * @see LayerClient
- * @see ParticipantProvider
  * @see Picasso
  * @see AuthenticationProvider
  */
@@ -37,7 +35,6 @@ public class App extends Application {
     private static Flavor sFlavor = new com.layer.messenger.flavor.Flavor();
 
     private static LayerClient sLayerClient;
-    private static ParticipantProvider sParticipantProvider;
     private static AuthenticationProvider sAuthProvider;
     private static Picasso sPicasso;
 
@@ -166,13 +163,6 @@ public class App extends Application {
         return sFlavor.getLayerAppId();
     }
 
-    public static ParticipantProvider getParticipantProvider() {
-        if (sParticipantProvider == null) {
-            sParticipantProvider = sFlavor.generateParticipantProvider(sInstance, getAuthenticationProvider());
-        }
-        return sParticipantProvider;
-    }
-
     public static AuthenticationProvider getAuthenticationProvider() {
         if (sAuthProvider == null) {
             sAuthProvider = sFlavor.generateAuthenticationProvider(sInstance);
@@ -205,7 +195,5 @@ public class App extends Application {
         LayerClient generateLayerClient(Context context, LayerClient.Options options);
 
         AuthenticationProvider generateAuthenticationProvider(Context context);
-
-        ParticipantProvider generateParticipantProvider(Context context, AuthenticationProvider authenticationProvider);
     }
 }

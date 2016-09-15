@@ -6,7 +6,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.layer.atlas.provider.ParticipantProvider;
 import com.layer.sdk.LayerClient;
 import com.squareup.picasso.Picasso;
 
@@ -84,10 +83,6 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected LayerClient getLayerClient() {
         return App.getLayerClient();
-    }
-
-    protected ParticipantProvider getParticipantProvider() {
-        return App.getParticipantProvider();
     }
 
     protected Picasso getPicasso() {

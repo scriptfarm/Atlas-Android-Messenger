@@ -274,7 +274,7 @@ public class PushNotificationReceiver extends BroadcastReceiver {
             Collections.sort(positions);
 
             // Construct notification
-            String conversationTitle = Util.getConversationTitle(App.getLayerClient(), App.getParticipantProvider(), conversation);
+            String conversationTitle = Util.getConversationTitle(App.getLayerClient(), conversation);
             NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle().setBigContentTitle(conversationTitle);
             int i;
             if (positions.size() <= MAX_MESSAGES) {

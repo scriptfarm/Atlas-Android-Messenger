@@ -72,6 +72,7 @@
     <string name="settings_title_disk_utilization">Disk Utilization</string>
     <string name="settings_title_disk_allowance">Disk Allowance</string>
     <string name="settings_title_auto_download_types">Auto-Download MIME Types</string>
+    <string name="settings_not_authenticated">No authenticated user</string>
 
     <string name="notifications_num_more">+%1$d more</string>
     <string name="notifications_new_messages">%1$d new messages</string>

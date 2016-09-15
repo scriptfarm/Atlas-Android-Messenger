@@ -2,7 +2,6 @@ package com.layer.messenger.flavor;
 
 import android.content.Context;
 
-import com.layer.atlas.provider.ParticipantProvider;
 import com.layer.messenger.App;
 import com.layer.messenger.R;
 import com.layer.messenger.flavor.util.CustomEndpoint;
@@ -37,10 +36,5 @@ public class Flavor implements App.Flavor {
     @Override
     public AuthenticationProvider generateAuthenticationProvider(Context context) {
         return new RailsAuthenticationProvider(context);
-    }
-
-    @Override
-    public ParticipantProvider generateParticipantProvider(Context context, AuthenticationProvider authenticationProvider) {
-        return new RailsParticipantProvider(context).setAuthenticationProvider(authenticationProvider);
     }
 }
