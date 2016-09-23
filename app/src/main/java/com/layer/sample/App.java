@@ -21,7 +21,6 @@ import com.layer.sdk.listeners.LayerAuthenticationListener;
  * @see com.layer.sample.App.Flavor
  * @see com.layer.sample.flavor.Flavor
  * @see LayerClient
- * @see ParticipantProvider
  * @see AuthenticationProvider
  */
 public class App extends Application {
@@ -30,7 +29,6 @@ public class App extends Application {
     private static Flavor sFlavor = new com.layer.sample.flavor.Flavor();
 
     private static LayerClient sLayerClient;
-    private static ParticipantProvider sParticipantProvider;
     private static AuthenticationProvider sAuthProvider;
 
 
@@ -143,13 +141,6 @@ public class App extends Application {
         return sFlavor.getLayerAppId();
     }
 
-    public static ParticipantProvider getParticipantProvider() {
-        if (sParticipantProvider == null) {
-            sParticipantProvider = sFlavor.generateParticipantProvider(sInstance, getAuthenticationProvider());
-        }
-        return sParticipantProvider;
-    }
-
     public static AuthenticationProvider getAuthenticationProvider() {
         if (sAuthProvider == null) {
             sAuthProvider = sFlavor.generateAuthenticationProvider(sInstance);
@@ -172,7 +163,5 @@ public class App extends Application {
         LayerClient generateLayerClient(Context context, LayerClient.Options options);
 
         AuthenticationProvider generateAuthenticationProvider(Context context);
-
-        ParticipantProvider generateParticipantProvider(Context context, AuthenticationProvider authenticationProvider);
     }
 }

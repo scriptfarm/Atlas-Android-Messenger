@@ -8,7 +8,6 @@ import com.layer.sample.R;
 
 public class ConversationViewHolder extends RecyclerView.ViewHolder {
 
-
     private TextView mTitleTextView;
     private TextView mMessageTextView;
     private TextView mLastMessageTimeTextView;

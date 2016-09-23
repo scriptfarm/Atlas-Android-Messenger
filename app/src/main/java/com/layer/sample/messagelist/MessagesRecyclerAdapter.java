@@ -8,12 +8,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.layer.sample.Participant;
-import com.layer.sample.ParticipantProvider;
 import com.layer.sample.R;
+import com.layer.sample.util.IdentityUtils;
 import com.layer.sample.util.MessageUtils;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.messaging.Conversation;
+import com.layer.sdk.messaging.Identity;
 import com.layer.sdk.messaging.Message;
 import com.layer.sdk.query.Predicate;
 import com.layer.sdk.query.Query;
@@ -25,17 +25,15 @@ import java.util.Map;
 
 public class MessagesRecyclerAdapter extends RecyclerView.Adapter<MessageViewHolder> {
 
-    private ParticipantProvider mParticipantProvider;
     private RecyclerViewController<Message> mQueryController;
-    private String mAuthenticatedUserId;
+    private Identity mAuthenticatedUser;
     private Context mContext;
     private OnMessageAppendedListener mMessageAppendedListener;
 
 
-    public MessagesRecyclerAdapter(Context context, LayerClient layerClient, ParticipantProvider participantProvider) {
+    public MessagesRecyclerAdapter(Context context, LayerClient layerClient) {
         mContext = context;
-        mParticipantProvider = participantProvider;
-        mAuthenticatedUserId = layerClient.getAuthenticatedUserId();
+        mAuthenticatedUser = layerClient.getAuthenticatedUser();
         mQueryController = layerClient.newRecyclerViewController(null, null, new NotifyChangesCallback());
     }
 
@@ -50,16 +48,16 @@ public class MessagesRecyclerAdapter extends RecyclerView.Adapter<MessageViewHol
     public void onBindViewHolder(MessageViewHolder holder, int position) {
         Message message = mQueryController.getItem(position);
 
-        String userId = message.getSender().getUserId();
-        boolean isSelf = userId.equals(mAuthenticatedUserId);
+        Identity sender = message.getSender();
+        boolean isSelf = mAuthenticatedUser.equals(sender);
         holder.setIsUsersMessage(isSelf);
 
         if (isSelf) {
             holder.setParticipantName(null);
             holder.setStatusText(getDateWithStatusText(message));
         } else {
-            Participant fromParticipant = mParticipantProvider.getParticipant(userId);
-            holder.setParticipantName(fromParticipant.getName());
+            message.markAsRead();
+            holder.setParticipantName(IdentityUtils.getDisplayName(sender));
             holder.setStatusText(getDateText(message));
         }
 
@@ -119,9 +117,9 @@ public class MessagesRecyclerAdapter extends RecyclerView.Adapter<MessageViewHol
         String status = null;
         boolean sent = false;
         boolean delivered = false;
-        Map<String, Message.RecipientStatus> recipientStatuses = message.getRecipientStatus();
-        for (Map.Entry<String, Message.RecipientStatus> entry : recipientStatuses.entrySet()) {
-            if (entry.getKey().equals(mAuthenticatedUserId)) {
+        Map<Identity, Message.RecipientStatus> recipientStatuses = message.getRecipientStatus();
+        for (Map.Entry<Identity, Message.RecipientStatus> entry : recipientStatuses.entrySet()) {
+            if (entry.getKey().equals(mAuthenticatedUser)) {
                 continue;
             }
             if (entry.getValue() == Message.RecipientStatus.READ) {

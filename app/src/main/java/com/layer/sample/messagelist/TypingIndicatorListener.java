@@ -6,33 +6,31 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
-import com.layer.sample.Participant;
-import com.layer.sample.ParticipantProvider;
 import com.layer.sample.R;
+import com.layer.sample.util.IdentityUtils;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.listeners.LayerTypingIndicatorListener;
 import com.layer.sdk.messaging.Conversation;
+import com.layer.sdk.messaging.Identity;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TypingIndicatorListener implements LayerTypingIndicatorListener {
-    private final List<String> mActiveTypists = new ArrayList<>();
+    private final List<Identity> mActiveTypists = new ArrayList<>();
     private final TextView mIndicatorView;
-    private final ParticipantProvider mParticipantProvider;
 
 
-    public TypingIndicatorListener(TextView indicatorView, ParticipantProvider participantProvider) {
+    public TypingIndicatorListener(TextView indicatorView) {
         mIndicatorView = indicatorView;
-        mParticipantProvider = participantProvider;
     }
 
     @Override
-    public void onTypingIndicator(LayerClient layerClient, Conversation conversation, String userId, TypingIndicator typingIndicator) {
+    public void onTypingIndicator(LayerClient layerClient, Conversation conversation, Identity user, TypingIndicator typingIndicator) {
         if (typingIndicator == TypingIndicator.FINISHED) {
-            mActiveTypists.remove(userId);
-        } else if (!mActiveTypists.contains(userId)){
-            mActiveTypists.add(userId);
+            mActiveTypists.remove(user);
+        } else if (!mActiveTypists.contains(user)){
+            mActiveTypists.add(user);
         }
         refreshView();
     }
@@ -51,14 +49,11 @@ public class TypingIndicatorListener implements LayerTypingIndicatorListener {
     private String createTypistsString() {
         StringBuilder sb = new StringBuilder();
         Context context = mIndicatorView.getContext();
-        for (String typistId : mActiveTypists) {
-            Participant participant = mParticipantProvider.getParticipant(typistId);
-            if (participant != null) {
-                if (sb.length() > 0) {
-                    sb.append("\n");
-                }
-                sb.append(context.getString(R.string.typing_indicator_format, participant.getName()));
+        for (Identity typist : mActiveTypists) {
+            if (sb.length() > 0) {
+                sb.append("\n");
             }
+            sb.append(context.getString(R.string.typing_indicator_format, IdentityUtils.getDisplayName(typist)));
         }
         return sb.toString();
     }

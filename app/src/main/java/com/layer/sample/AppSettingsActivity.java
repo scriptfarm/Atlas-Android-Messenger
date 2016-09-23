@@ -16,6 +16,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.layer.sample.util.IdentityUtils;
 import com.layer.sample.util.Log;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.changes.LayerChangeEvent;
@@ -24,6 +25,7 @@ import com.layer.sdk.listeners.LayerAuthenticationListener;
 import com.layer.sdk.listeners.LayerChangeEventListener;
 import com.layer.sdk.listeners.LayerConnectionListener;
 import com.layer.sdk.messaging.Conversation;
+import com.layer.sdk.messaging.Identity;
 
 import java.util.List;
 import java.util.Locale;
@@ -176,8 +178,12 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         if (!getLayerClient().isAuthenticated()) return;
 
         /* Account */
-        Participant participant = getParticipantProvider().getParticipant(getLayerClient().getAuthenticatedUserId());
-        mUserName.setText(participant.getName());
+        Identity currentUser = getLayerClient().getAuthenticatedUser();
+        if (currentUser != null) {
+            mUserName.setText(IdentityUtils.getDisplayName(currentUser));
+        } else {
+            mUserName.setText(null);
+        }
         mUserState.setText(getLayerClient().isConnected() ? R.string.settings_content_connected : R.string.settings_content_disconnected);
 
         /* Notifications */
@@ -191,7 +197,11 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         mAppVersion.setText(getString(R.string.settings_content_app_version, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE));
         mLayerVersion.setText(LayerClient.getVersion());
         mAndroidVersion.setText(getString(R.string.settings_content_android_version, Build.VERSION.RELEASE, Build.VERSION.SDK_INT));
-        mUserId.setText(getLayerClient().getAuthenticatedUserId());
+        if (currentUser != null) {
+            mUserId.setText(currentUser.getUserId());
+        } else {
+            mUserId.setText(R.string.settings_not_authenticated);
+        }
         
         /* Statistics */
         long totalMessages = 0;

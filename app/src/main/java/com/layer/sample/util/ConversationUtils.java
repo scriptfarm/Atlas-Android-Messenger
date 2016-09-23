@@ -1,25 +1,22 @@
 package com.layer.sample.util;
 
-import com.layer.sample.Participant;
-import com.layer.sample.ParticipantProvider;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.messaging.Conversation;
+import com.layer.sdk.messaging.Identity;
 
 public class ConversationUtils {
     private static final String METADATA_KEY_CONVERSATION_TITLE = "conversationName";
 
-    public static String getConversationTitle(LayerClient client, ParticipantProvider provider, Conversation conversation) {
+    public static String getConversationTitle(LayerClient client, Conversation conversation) {
         String metadataTitle = getConversationMetadataTitle(conversation);
         if (metadataTitle != null) return metadataTitle.trim();
 
         StringBuilder sb = new StringBuilder();
-        String userId = client.getAuthenticatedUserId();
-        for (String participantId : conversation.getParticipants()) {
-            if (participantId.equals(userId)) continue;
-            Participant participant = provider.getParticipant(participantId);
-            if (participant == null) continue;
+        Identity authenticatedUser = client.getAuthenticatedUser();
+        for (Identity participant : conversation.getParticipants()) {
+            if (participant.equals(authenticatedUser)) continue;
             if (sb.length() > 0) sb.append(", ");
-            sb.append(participant.getName());
+            sb.append(IdentityUtils.getDisplayName(participant));
         }
         return sb.toString().trim();
     }

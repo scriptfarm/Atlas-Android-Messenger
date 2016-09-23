@@ -3,7 +3,6 @@ package com.layer.sample.flavor;
 import android.content.Context;
 
 import com.layer.sample.App;
-import com.layer.sample.ParticipantProvider;
 import com.layer.sample.util.AuthenticationProvider;
 import com.layer.sample.util.Log;
 import com.layer.sdk.LayerClient;
@@ -55,7 +54,7 @@ public class Flavor implements App.Flavor {
         appId = appId.trim();
         if (Log.isLoggable(Log.VERBOSE)) Log.v("Saving Layer App ID: " + appId);
         App.getInstance().getSharedPreferences("layerAppId", Context.MODE_PRIVATE).edit()
-                .putString("layerAppId", appId).commit();
+                .putString("layerAppId", appId).apply();
     }
 
 
@@ -71,11 +70,6 @@ public class Flavor implements App.Flavor {
 
         options.googleCloudMessagingSenderId(GCM_SENDER_ID);
         return LayerClient.newInstance(context, appId, options);
-    }
-
-    @Override
-    public ParticipantProvider generateParticipantProvider(Context context, AuthenticationProvider authenticationProvider) {
-        return new DemoParticipantProvider(context).setLayerAppId(getLayerAppId());
     }
 
     @Override

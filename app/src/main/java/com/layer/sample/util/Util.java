@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 
 public class Util {
+
     public static String streamToString(InputStream stream) throws IOException {
         int n = 0;
         char[] buffer = new char[1024 * 4];

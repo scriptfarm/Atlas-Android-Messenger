@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 
@@ -20,6 +21,7 @@ import com.layer.sdk.changes.LayerChangeEvent;
 import com.layer.sdk.listeners.LayerChangeEventListener;
 import com.layer.sdk.messaging.Conversation;
 import com.layer.sdk.messaging.Message;
+import com.layer.sdk.messaging.PushNotificationPayload;
 import com.layer.sdk.query.Predicate;
 import com.layer.sdk.query.Query;
 import com.layer.sdk.query.Queryable;
@@ -56,7 +58,8 @@ public class PushNotificationReceiver extends BroadcastReceiver {
     public void onReceive(final Context context, Intent intent) {
         Bundle extras = intent.getExtras();
         if (extras == null) return;
-        final String text = extras.getString(LAYER_TEXT_KEY, null);
+
+        final PushNotificationPayload payload = PushNotificationPayload.fromGcmIntentExtras(extras);
         final Uri conversationId = extras.getParcelable(LAYER_CONVERSATION_KEY);
         final Uri messageId = extras.getParcelable(LAYER_MESSAGE_KEY);
 
@@ -86,26 +89,28 @@ public class PushNotificationReceiver extends BroadcastReceiver {
                 return;
             }
 
-            // TODO Refactor after waitForContent has been migrated to the SDK - APPS-2416.
             // Try to have content ready for viewing before posting a Notification
-            waitForContent(App.getLayerClient().connect(), messageId,
-                    new ContentAvailableCallback() {
-                        @Override
-                        public void onContentAvailable(LayerClient client, Queryable object) {
-                            if (Log.isLoggable(Log.VERBOSE)) {
-                                Log.v("Pre-fetched notification content");
-                            }
-                            getNotifications(context).add(context, (Message) object, text);
-                        }
+            LayerClient layerClient = App.getLayerClient();
 
-                        @Override
-                        public void onContentFailed(LayerClient client, Uri objectId, String reason) {
-                            if (Log.isLoggable(Log.ERROR)) {
-                                Log.e("Failed to fetch notification content");
-                            }
+            if (layerClient != null) {
+                layerClient.waitForContent(messageId, new LayerClient.ContentAvailableCallback() {
+                    @Override
+                    public void onContentAvailable(LayerClient client, @NonNull Queryable object) {
+                        if (Log.isLoggable(Log.VERBOSE)) {
+                            Log.v("Pre-fetched notification content");
                         }
+                        getNotifications(context).add(context, (Message) object, payload.getText());
                     }
-            );
+
+                    @Override
+                    public void onContentFailed(LayerClient client, Uri objectId, Exception e) {
+                        if (Log.isLoggable(Log.ERROR)) {
+                            Log.e("Failed to fetch notification content");
+                        }
+                        getNotifications(context).notifyOnContentFailure(context, conversationId, messageId, payload.getText());
+                    }
+                });
+            }
         } else if (intent.getAction().equals(ACTION_CANCEL)) {
             // User swiped notification out
             if (Log.isLoggable(Log.VERBOSE)) {
@@ -202,8 +207,8 @@ public class PushNotificationReceiver extends BroadcastReceiver {
                     if (conversationId == null) return;
                     String key = conversationId.toString();
                     long maxPosition = getMaxPosition(conversationId);
-                    mMessages.edit().remove(key).commit();
-                    mPositions.edit().putLong(key, maxPosition).commit();
+                    mMessages.edit().remove(key).apply();
+                    mPositions.edit().putLong(key, maxPosition).apply();
                     mManager.cancel(key, MESSAGE_ID);
                 }
             }).start();
@@ -237,7 +242,7 @@ public class PushNotificationReceiver extends BroadcastReceiver {
                 messageEntry.put(KEY_TEXT, text);
                 messages.put(messageKey, messageEntry);
 
-                mMessages.edit().putString(key, messages.toString()).commit();
+                mMessages.edit().putString(key, messages.toString()).apply();
             } catch (JSONException e) {
                 if (Log.isLoggable(Log.ERROR)) {
                     Log.e(e.getMessage(), e);
@@ -252,7 +257,7 @@ public class PushNotificationReceiver extends BroadcastReceiver {
             if (messagesString == null) return;
 
             // Get current notification texts
-            Map<Long, String> positionText = new HashMap<Long, String>();
+            Map<Long, String> positionText = new HashMap<>();
             try {
                 JSONObject messagesJson = new JSONObject(messagesString);
                 Iterator<String> iterator = messagesJson.keys();
@@ -275,7 +280,7 @@ public class PushNotificationReceiver extends BroadcastReceiver {
             Collections.sort(positions);
 
             // Construct notification
-            String conversationTitle = ConversationUtils.getConversationTitle(App.getLayerClient(), App.getParticipantProvider(), conversation);
+            String conversationTitle = ConversationUtils.getConversationTitle(App.getLayerClient(), conversation);
             NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle().setBigContentTitle(conversationTitle);
             int i;
             if (positions.size() <= MAX_MESSAGES) {
@@ -304,28 +309,37 @@ public class PushNotificationReceiver extends BroadcastReceiver {
                     .setStyle(inboxStyle);
 
             // Intent to launch when clicked
-            Intent clickIntent = new Intent(context, MessagesListActivity.class)
-                    .setPackage(context.getApplicationContext().getPackageName())
-                    .putExtra(LAYER_CONVERSATION_KEY, conversation.getId())
-                    .putExtra(LAYER_MESSAGE_KEY, message.getId())
-                    .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            PendingIntent clickPendingIntent = PendingIntent.getActivity(
-                    context, sPendingIntentCounter.getAndIncrement(),
-                    clickIntent, PendingIntent.FLAG_ONE_SHOT);
+            PendingIntent clickPendingIntent = createNotificationClickIntent(context, conversation.getId(), message.getId());
             mBuilder.setContentIntent(clickPendingIntent);
 
             // Intent to launch when swiped out
-            Intent cancelIntent = new Intent(ACTION_CANCEL)
-                    .setPackage(context.getApplicationContext().getPackageName())
-                    .putExtra(LAYER_CONVERSATION_KEY, conversation.getId())
-                    .putExtra(LAYER_MESSAGE_KEY, message.getId());
-            PendingIntent cancelPendingIntent = PendingIntent.getBroadcast(
-                    context, sPendingIntentCounter.getAndIncrement(),
-                    cancelIntent, PendingIntent.FLAG_ONE_SHOT);
-            mBuilder.setDeleteIntent(cancelPendingIntent);
+            PendingIntent deleteIntent = createNotificationDeleteIntent(context, conversation.getId(), message.getId());
+            mBuilder.setDeleteIntent(deleteIntent);
 
             // Show the notification
             mManager.notify(conversation.getId().toString(), MESSAGE_ID, mBuilder.build());
+        }
+
+        private void notifyOnContentFailure(Context context, Uri conversationId, Uri messageId, String text) {
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
+                    .setSmallIcon(R.drawable.notification)
+                    .setContentTitle(context.getString(R.string.push_notification_no_content_title))
+                    .setContentText(text)
+                    .setAutoCancel(true)
+                    .setLights(ContextCompat.getColor(context, R.color.colorPrimary), 100, 1900)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setDefaults(NotificationCompat.DEFAULT_SOUND | NotificationCompat.DEFAULT_VIBRATE);
+
+            // Intent to launch when clicked
+            PendingIntent clickPendingIntent = createNotificationClickIntent(context, conversationId, messageId);
+            mBuilder.setContentIntent(clickPendingIntent);
+
+            // Intent to launch when swiped out
+            PendingIntent deleteIntent = createNotificationDeleteIntent(context, conversationId, messageId);
+            mBuilder.setDeleteIntent(deleteIntent);
+
+            // Show the notification
+            mManager.notify(conversationId.toString(), MESSAGE_ID, mBuilder.build());
         }
 
         /**
@@ -348,61 +362,26 @@ public class PushNotificationReceiver extends BroadcastReceiver {
             if (results.isEmpty()) return Long.MIN_VALUE;
             return ((Message) results.get(0)).getPosition();
         }
-    }
 
-    // TODO Remove after waitForContent has been migrated to the SDK - APPS-2416.
-    private static void waitForContent(final LayerClient client, final Uri id, final ContentAvailableCallback callback) {
-        if (client == null) {
-            callback.onContentFailed(client, id, "LayerClient is null");
-            return;
+        private static PendingIntent createNotificationClickIntent(Context context, Uri conversationId, Uri messageId) {
+            Intent clickIntent = new Intent(context, MessagesListActivity.class)
+                    .setPackage(context.getApplicationContext().getPackageName())
+                    .putExtra(LAYER_CONVERSATION_KEY, conversationId)
+                    .putExtra(LAYER_MESSAGE_KEY, messageId)
+                    .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            return PendingIntent.getActivity(
+                    context, sPendingIntentCounter.getAndIncrement(),
+                    clickIntent, PendingIntent.FLAG_ONE_SHOT);
         }
 
-        if (id == null) {
-            callback.onContentFailed(client, id, "LayerObject ID is null");
-            return;
+        private static PendingIntent createNotificationDeleteIntent(Context context, Uri conversationId, Uri messageId) {
+            Intent cancelIntent = new Intent(ACTION_CANCEL)
+                    .setPackage(context.getApplicationContext().getPackageName())
+                    .putExtra(LAYER_CONVERSATION_KEY, conversationId)
+                    .putExtra(LAYER_MESSAGE_KEY, messageId);
+            return PendingIntent.getBroadcast(
+                    context, sPendingIntentCounter.getAndIncrement(),
+                    cancelIntent, PendingIntent.FLAG_ONE_SHOT);
         }
-
-        // Register an event listener that waits for the given conversation or message
-        final AtomicBoolean hasNotified = new AtomicBoolean(false);
-        LayerChangeEventListener listener = new LayerChangeEventListener.BackgroundThread() {
-            @Override
-            public void onChangeEvent(LayerChangeEvent layerChangeEvent) {
-                for (LayerChange change : layerChangeEvent.getChanges()) {
-                    Queryable q = (Queryable) change.getObject();
-                    if (!q.getId().equals(id)) continue;
-                    client.unregisterEventListener(this);
-                    if (!hasNotified.compareAndSet(false, true)) return;
-                    if (Log.isLoggable(Log.VERBOSE)) {
-                        Log.v("Received content for " + id);
-                    }
-                    callback.onContentAvailable(client, q);
-                    return;
-                }
-            }
-        };
-        client.registerEventListener(listener);
-
-        // If content is not yet available, wait for the listener.
-        Queryable q = client.get(id);
-        if (q == null) {
-            if (Log.isLoggable(Log.VERBOSE)) {
-                Log.v("Content not yet available, waiting for " + id);
-            }
-            return;
-        }
-
-        // If content is available now, abort the listener and notify now.
-        client.unregisterEventListener(listener);
-        if (!hasNotified.compareAndSet(false, true)) return;
-        if (Log.isLoggable(Log.VERBOSE)) {
-            Log.v("Content already available for " + id);
-        }
-        callback.onContentAvailable(client, q);
-    }
-
-    private interface ContentAvailableCallback {
-        void onContentAvailable(LayerClient client, Queryable object);
-
-        void onContentFailed(LayerClient client, Uri objectId, String reason);
     }
 }

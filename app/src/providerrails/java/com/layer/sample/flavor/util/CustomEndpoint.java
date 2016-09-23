@@ -92,7 +92,7 @@ public class CustomEndpoint {
     }
 
     private static void setEndpointName(String name) {
-        App.getInstance().getSharedPreferences("layer_custom_endpoint", Context.MODE_PRIVATE).edit().putString("name", name).commit();
+        App.getInstance().getSharedPreferences("layer_custom_endpoint", Context.MODE_PRIVATE).edit().putString("name", name).apply();
         Map<String, Endpoint> endpoints = getEndpoints();
         sEndpoint = (endpoints == null) ? null : endpoints.get(name);
         if (Log.isLoggable(Log.VERBOSE)) Log.v("Setting custom endpoint to: " + sEndpoint);

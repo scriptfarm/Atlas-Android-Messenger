@@ -33,13 +33,13 @@ public class DemoAuthenticationProvider implements AuthenticationProvider<DemoAu
     @Override
     public AuthenticationProvider<Credentials> setCredentials(Credentials credentials) {
         if (credentials == null) {
-            mPreferences.edit().clear().commit();
+            mPreferences.edit().clear().apply();
             return this;
         }
         mPreferences.edit()
                 .putString("appId", credentials.getLayerAppId())
                 .putString("name", credentials.getUserName())
-                .commit();
+                .apply();
         return this;
     }
 

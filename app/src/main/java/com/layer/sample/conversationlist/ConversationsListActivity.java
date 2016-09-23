@@ -65,7 +65,7 @@ public class ConversationsListActivity extends BaseActivity {
         conversationsList.addItemDecoration(new DividerItemDecoration(this));
 
         LayerClient layerClient = getLayerClient();
-        ConversationRecyclerAdapter conversationsAdapter = new ConversationRecyclerAdapter(layerClient, getParticipantProvider());
+        ConversationRecyclerAdapter conversationsAdapter = new ConversationRecyclerAdapter(layerClient);
         conversationsList.setAdapter(conversationsAdapter);
     }
 }

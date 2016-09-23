@@ -3,7 +3,6 @@ package com.layer.sample.flavor;
 import android.content.Context;
 
 import com.layer.sample.App;
-import com.layer.sample.ParticipantProvider;
 import com.layer.sample.R;
 import com.layer.sample.flavor.util.CustomEndpoint;
 import com.layer.sample.util.AuthenticationProvider;
@@ -37,10 +36,5 @@ public class Flavor implements App.Flavor {
     @Override
     public AuthenticationProvider generateAuthenticationProvider(Context context) {
         return new RailsAuthenticationProvider(context);
-    }
-
-    @Override
-    public ParticipantProvider generateParticipantProvider(Context context, AuthenticationProvider authenticationProvider) {
-        return new RailsParticipantProvider(context).setAuthenticationProvider(authenticationProvider);
     }
 }

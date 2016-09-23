@@ -7,14 +7,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.layer.sample.Participant;
-import com.layer.sample.ParticipantProvider;
 import com.layer.sample.PushNotificationReceiver;
 import com.layer.sample.R;
 import com.layer.sample.messagelist.MessagesListActivity;
+import com.layer.sample.util.IdentityUtils;
 import com.layer.sample.util.MessageUtils;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.messaging.Conversation;
+import com.layer.sdk.messaging.Identity;
 import com.layer.sdk.messaging.Message;
 import com.layer.sdk.query.Predicate;
 import com.layer.sdk.query.Query;
@@ -23,17 +23,15 @@ import com.layer.sdk.query.SortDescriptor;
 
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 public class ConversationRecyclerAdapter extends RecyclerView.Adapter<ConversationViewHolder> {
 
-    private ParticipantProvider mParticipantProvider;
     private RecyclerViewController<Conversation> mQueryController;
-    private String mAuthenticatedUserId;
+    private Identity mAuthenticatedUser;
 
-    public ConversationRecyclerAdapter(LayerClient layerClient, ParticipantProvider participantProvider) {
-        mParticipantProvider = participantProvider;
-        mAuthenticatedUserId = layerClient.getAuthenticatedUserId();
+    public ConversationRecyclerAdapter(LayerClient layerClient) {
+        mAuthenticatedUser = layerClient.getAuthenticatedUser();
         setHasStableIds(false);
 
         buildAndExecuteQuery(layerClient);
@@ -51,8 +49,8 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         final Conversation conversation = mQueryController.getItem(position);
         holder.setOnClickListener(new ItemClickListener(conversation));
 
-        List<String> participantIds = conversation.getParticipants();
-        setTitle(holder, participantIds);
+        Set<Identity> participants = conversation.getParticipants();
+        setTitle(holder, participants);
 
         Message lastMessage = conversation.getLastMessage();
         setMessage(holder, lastMessage);
@@ -77,17 +75,16 @@ public class ConversationRecyclerAdapter extends RecyclerView.Adapter<Conversati
         mQueryController.execute();
     }
 
-    private void setTitle(ConversationViewHolder holder, List<String> participantIds) {
+    private void setTitle(ConversationViewHolder holder, Set<Identity> participants) {
         StringBuilder sb = new StringBuilder();
-        for (String participantId : participantIds) {
-            if (mAuthenticatedUserId.equals(participantId)) {
+        for (Identity participant : participants) {
+            if (mAuthenticatedUser.equals(participant)) {
                 continue;
             }
-            Participant participant = mParticipantProvider.getParticipant(participantId);
             if (sb.length() > 0) {
                 sb.append(", ");
             }
-            sb.append(participant.getName());
+            sb.append(IdentityUtils.getDisplayName(participant));
         }
 
         holder.setName(sb.toString());

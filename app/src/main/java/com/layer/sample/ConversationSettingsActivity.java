@@ -23,11 +23,14 @@ import android.widget.Toast;
 
 import com.layer.sample.conversationlist.ConversationsListActivity;
 import com.layer.sample.util.ConversationUtils;
+import com.layer.sample.util.IdentityDisplayNameComparator;
+import com.layer.sample.util.IdentityUtils;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.changes.LayerChangeEvent;
 import com.layer.sdk.listeners.LayerChangeEventListener;
 import com.layer.sdk.listeners.LayerPolicyListener;
 import com.layer.sdk.messaging.Conversation;
+import com.layer.sdk.messaging.Identity;
 import com.layer.sdk.policy.Policy;
 
 import java.util.ArrayList;
@@ -93,7 +96,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
             @Override
             public void onClick(View v) {
                 setEnabled(false);
-                mConversation.removeParticipants(getLayerClient().getAuthenticatedUserId());
+                mConversation.removeParticipants(getLayerClient().getAuthenticatedUser());
                 refresh();
                 Intent intent = new Intent(ConversationSettingsActivity.this, ConversationsListActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -114,8 +117,8 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
         mConversationName.setText(ConversationUtils.getConversationMetadataTitle(mConversation));
         mShowNotifications.setChecked(PushNotificationReceiver.getNotifications(this).isEnabled(mConversation.getId()));
 
-        Set<String> participantsMinusMe = new HashSet<String>(mConversation.getParticipants());
-        participantsMinusMe.remove(getLayerClient().getAuthenticatedUserId());
+        Set<Identity> participantsMinusMe = new HashSet<>(mConversation.getParticipants());
+        participantsMinusMe.remove(getLayerClient().getAuthenticatedUser());
 
         if (participantsMinusMe.size() == 0) {
             // I've been removed
@@ -158,19 +161,15 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
     }
 
     private class ParticipantAdapter extends RecyclerView.Adapter<ViewHolder> {
-        List<Participant> mParticipants = new ArrayList<Participant>();
+        List<Identity> mParticipants = new ArrayList<>();
 
         public void refresh() {
             // Get new sorted list of Participants
-            ParticipantProvider provider = App.getParticipantProvider();
             mParticipants.clear();
-            for (String participantId : mConversation.getParticipants()) {
-                if (participantId.equals(getLayerClient().getAuthenticatedUserId())) continue;
-                Participant participant = provider.getParticipant(participantId);
-                if (participant == null) continue;
-                mParticipants.add(participant);
-            }
-            Collections.sort(mParticipants);
+            Set<Identity> conversationParticipants = mConversation.getParticipants();
+            conversationParticipants.remove(getLayerClient().getAuthenticatedUser());
+            mParticipants.addAll(conversationParticipants);
+            Collections.sort(mParticipants, new IdentityDisplayNameComparator());
 
             // Adjust participant container height
             int height = Math.round(mParticipants.size() * getResources().getDimensionPixelSize(R.dimen.secondary_item_height));
@@ -199,7 +198,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
                         builder.setNeutralButton(R.string.alert_button_remove, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mConversation.removeParticipants(holder.mParticipant.getId());
+                                mConversation.removeParticipants(holder.mParticipant);
                             }
                         });
                     }
@@ -208,10 +207,10 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    Participant participant = holder.mParticipant;
+                                    Identity participant = holder.mParticipant;
                                     if (holder.mBlockPolicy == null) {
                                         // Block
-                                        holder.mBlockPolicy = new Policy.Builder(Policy.PolicyType.BLOCK).sentByUserId(participant.getId()).build();
+                                        holder.mBlockPolicy = new Policy.Builder(Policy.PolicyType.BLOCK).sentByUserId(participant.getUserId()).build();
                                         getLayerClient().addPolicy(holder.mBlockPolicy);
                                         holder.mBlocked.setVisibility(View.VISIBLE);
                                     } else {
@@ -234,8 +233,8 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
 
         @Override
         public void onBindViewHolder(ViewHolder viewHolder, int position) {
-            Participant participant = mParticipants.get(position);
-            viewHolder.mTitle.setText(participant.getName());
+            Identity participant = mParticipants.get(position);
+            viewHolder.mTitle.setText(IdentityUtils.getDisplayName(participant));
             viewHolder.mParticipant = participant;
 
             Policy block = null;
@@ -259,7 +258,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
     private static class ViewHolder extends RecyclerView.ViewHolder {
         TextView mTitle;
         ImageView mBlocked;
-        Participant mParticipant;
+        Identity mParticipant;
         Policy mBlockPolicy;
 
         public ViewHolder(ViewGroup parent) {

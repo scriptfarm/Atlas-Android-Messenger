@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.2"
 
     defaultConfig {
         applicationId "com.layer.sample"
         minSdkVersion 14
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode 1
         versionName "$versionCode"
     }
@@ -31,13 +31,13 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:23.3.0'
-    compile 'com.android.support:design:23.3.0'
-    compile 'com.android.support:gridlayout-v7:23.3.0'
+    compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.android.support:design:24.2.1'
+    compile 'com.android.support:gridlayout-v7:24.2.1'
 
-    compile 'com.layer.sdk:layer-sdk:0.20.4'
+    compile 'com.layer.sdk:layer-sdk:0.22.0'
     compile 'org.slf4j:slf4j-nop:1.5.8'
 
     // Flavor-specific dependencies
-    providerdemoCompile 'com.google.android.gms:play-services-vision:8.4.0'
+    providerdemoCompile 'com.google.android.gms:play-services-vision:9.4.0'
 }

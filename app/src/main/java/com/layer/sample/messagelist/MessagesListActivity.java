@@ -20,15 +20,18 @@ import com.layer.sample.ConversationSettingsActivity;
 import com.layer.sample.PushNotificationReceiver;
 import com.layer.sample.R;
 import com.layer.sample.util.ConversationUtils;
+import com.layer.sample.util.IdentityUtils;
 import com.layer.sample.util.Log;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.exceptions.LayerConversationException;
 import com.layer.sdk.listeners.LayerTypingIndicatorListener;
 import com.layer.sdk.messaging.Conversation;
 import com.layer.sdk.messaging.ConversationOptions;
+import com.layer.sdk.messaging.Identity;
 import com.layer.sdk.messaging.Message;
 import com.layer.sdk.messaging.MessageOptions;
 import com.layer.sdk.messaging.MessagePart;
+import com.layer.sdk.messaging.PushNotificationPayload;
 
 public class MessagesListActivity extends BaseActivity {
     public static final String EXTRA_KEY_PARTICIPANT_IDS = "participantIds";
@@ -109,7 +112,7 @@ public class MessagesListActivity extends BaseActivity {
     }
 
     private void initializeMessagesAdapter() {
-        mMessagesAdapter = new MessagesRecyclerAdapter(this, getLayerClient(), getParticipantProvider());
+        mMessagesAdapter = new MessagesRecyclerAdapter(this, getLayerClient());
         mMessagesAdapter.setMessageAppendedListener(new ScrollOnMessageAppendedListener());
 
         mMessagesRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
@@ -125,7 +128,7 @@ public class MessagesListActivity extends BaseActivity {
 
     private void initializeTypingIndicator() {
         TextView typingIndicatorView = (TextView) findViewById(R.id.typing_indicator);
-        mTypingIndicatorListener = new TypingIndicatorListener(typingIndicatorView, getParticipantProvider());
+        mTypingIndicatorListener = new TypingIndicatorListener(typingIndicatorView);
     }
 
     private void initializeMessageEntry() {
@@ -146,7 +149,7 @@ public class MessagesListActivity extends BaseActivity {
         } else if (intent.hasExtra(EXTRA_KEY_PARTICIPANT_IDS)) {
             String[] participantIds = intent.getStringArrayExtra(EXTRA_KEY_PARTICIPANT_IDS);
             try {
-                conversation = getLayerClient().newConversation(new ConversationOptions().distinct(true), participantIds);
+                conversation = getLayerClient().newConversationWithUserIds(new ConversationOptions().distinct(true), participantIds);
             } catch (LayerConversationException e) {
                 conversation = e.getConversation();
             }
@@ -163,7 +166,7 @@ public class MessagesListActivity extends BaseActivity {
         if (!useConversation) {
             setTitle(R.string.title_select_conversation);
         } else {
-            setTitle(ConversationUtils.getConversationTitle(getLayerClient(), getParticipantProvider(), mConversation));
+            setTitle(ConversationUtils.getConversationTitle(getLayerClient(), mConversation));
         }
     }
 
@@ -179,7 +182,10 @@ public class MessagesListActivity extends BaseActivity {
 
         // Send message
         String notificationString = createMessageNotificationString(text);
-        MessageOptions messageOptions = new MessageOptions().pushNotificationMessage(notificationString);
+        PushNotificationPayload payload = new PushNotificationPayload.Builder()
+                .text(notificationString)
+                .build();
+        MessageOptions messageOptions = new MessageOptions().defaultPushNotificationPayload(payload);
         sendMessage(text, messageOptions);
 
         // Clear text
@@ -187,7 +193,8 @@ public class MessagesListActivity extends BaseActivity {
     }
 
     private String createMessageNotificationString(String text) {
-        String myName = getParticipantProvider().getParticipant(getLayerClient().getAuthenticatedUserId()).getName();
+        Identity me = getLayerClient().getAuthenticatedUser();
+        String myName = me == null ? "" : IdentityUtils.getDisplayName(me);
         String pushMessage = (text.length() < MAX_NOTIFICATION_LENGTH) ? text : (text.substring(0, MAX_NOTIFICATION_LENGTH) + "…");
         return String.format("%s: %s", myName, pushMessage);
     }

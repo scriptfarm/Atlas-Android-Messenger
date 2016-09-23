@@ -114,7 +114,7 @@ public class RailsAuthenticationProvider implements AuthenticationProvider<Rails
 
     private void replaceCredentials(Credentials credentials) {
         if (credentials == null) {
-            mPreferences.edit().clear().commit();
+            mPreferences.edit().clear().apply();
             return;
         }
         mPreferences.edit()
@@ -122,7 +122,7 @@ public class RailsAuthenticationProvider implements AuthenticationProvider<Rails
                 .putString("email", credentials.getEmail())
                 .putString("password", credentials.getPassword())
                 .putString("authToken", credentials.getAuthToken())
-                .commit();
+                .apply();
     }
 
     protected Credentials getCredentials() {

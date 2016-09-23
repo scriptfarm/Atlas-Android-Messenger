@@ -83,8 +83,4 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected LayerClient getLayerClient() {
         return App.getLayerClient();
     }
-
-    protected ParticipantProvider getParticipantProvider() {
-        return App.getParticipantProvider();
-    }
 }
