@@ -26,6 +26,12 @@ Two default implementations are provided via [product flavors](http://developer.
 
 In Android Studio, switch flavors using Build Variants, typically in the side tab on the lower left of the Android Studio window.
 
+###<a name="pushnotifications"></a>Push Notifications
+
+In order to build Atlas-Messenger, you must generate a `google-services.json` file so push notifications will be enabled. If this is not done, the Gradle build will fail with the error: `File google-services.json is missing. The Google Services Plugin cannot function without it.`
+
+To do this, please follow the push notification setup steps [here](https://docs.layer.com/sdk/android/push). You may also remove the `google-services` plugin in the necessary `build.gradle` files to disable push notifications.
+
 ##<a name="contributing"></a>Contributing
 Atlas is an Open Source project maintained by Layer. Feedback and contributions are always welcome and the maintainers try to process patches as quickly as possible. Feel free to open up a Pull Request or Issue on Github.
 

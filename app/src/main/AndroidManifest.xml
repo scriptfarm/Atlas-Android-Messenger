@@ -13,8 +13,6 @@
     <!-- Layer SDK -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
     <uses-permission android:name="android.permission.GET_ACCOUNTS" android:maxSdkVersion="18"/>
     <uses-permission android:name="android.permission.GET_TASKS" android:maxSdkVersion="20"/>
 
@@ -22,10 +20,6 @@
         android:name="${applicationId}.permission.LAYER_PUSH"
         android:protectionLevel="signature"/>
     <uses-permission android:name="${applicationId}.permission.LAYER_PUSH"/>
-    <permission
-        android:name="${applicationId}.permission.C2D_MESSAGE"
-        android:protectionLevel="signature"/>
-    <uses-permission android:name="${applicationId}.permission.C2D_MESSAGE"/>
 
     <application
         android:name=".App"
@@ -87,25 +81,21 @@
             </intent-filter>
         </receiver>
 
-        <!--Receiver: Layer SDK GCM handling -->
-        <receiver
-            android:name="com.layer.sdk.services.GcmBroadcastReceiver"
-            android:permission="com.google.android.c2dm.permission.SEND">
-            <intent-filter android:priority="470">
-                <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-                <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
-                <action android:name="com.google.android.c2dm.intent.REGISTER"/>
-
-                <category android:name="${applicationId}"/>
+        <!-- Services: Layer SDK FCM handling -->
+        <service
+            android:name="com.layer.sdk.services.LayerFcmService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
-        </receiver>
-
-        <!--Service: Layer SDK GCM handling -->
-        <service android:name="com.layer.sdk.services.GcmIntentService"/>
-
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version"/>
+        </service>
+        <service
+            android:name="com.layer.sdk.services.LayerFcmInstanceIdService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+            </intent-filter>
+        </service>
 
     </application>
 

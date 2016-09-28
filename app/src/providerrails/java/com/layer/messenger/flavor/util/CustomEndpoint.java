@@ -157,7 +157,6 @@ public class CustomEndpoint {
     public static class Endpoint {
         final String mName;
         final String mAppId;
-        final String mGcmSenderId;
         final String mProviderUrl;
 
         final String mPlatformUrl;
@@ -171,7 +170,6 @@ public class CustomEndpoint {
         public Endpoint(JSONObject o) throws JSONException {
             mName = o.getString("name");
             mAppId = o.getString("appId");
-            mGcmSenderId = o.getString("gcmSenderId");
             mProviderUrl = o.getString("providerUrl");
 
             JSONObject platform = o.optJSONObject("platform");
@@ -198,8 +196,6 @@ public class CustomEndpoint {
         }
 
         public void setLayerClientOptions(LayerClient.Options options) {
-            if (mGcmSenderId != null) options.googleCloudMessagingSenderId(mGcmSenderId);
-
             if (mEndpointAuth != null) {
                 options.customEndpoint(mEndpointConf, mEndpointCert, mEndpointAuth, mEndpointSync);
             }
@@ -218,7 +214,6 @@ public class CustomEndpoint {
             return "Endpoint{" +
                     "mName='" + mName + '\'' +
                     ", mAppId='" + mAppId + '\'' +
-                    ", mGcmSenderId='" + mGcmSenderId + '\'' +
                     ", mProviderUrl='" + mProviderUrl + '\'' +
                     ", mPlatformUrl='" + mPlatformUrl + '\'' +
                     ", mPlatformToken='" + mPlatformToken + '\'' +

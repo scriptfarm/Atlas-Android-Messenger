@@ -52,7 +52,7 @@ public class PushNotificationReceiver extends BroadcastReceiver {
         Bundle extras = intent.getExtras();
         if (extras == null) return;
 
-        final PushNotificationPayload payload = PushNotificationPayload.fromGcmIntentExtras(extras);
+        final PushNotificationPayload payload = PushNotificationPayload.fromLayerPushExtras(extras);
         final Uri conversationId = extras.getParcelable(LAYER_CONVERSATION_KEY);
         final Uri messageId = extras.getParcelable(LAYER_MESSAGE_KEY);
 

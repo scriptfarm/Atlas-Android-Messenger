@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.2"
 
     defaultConfig {
         applicationId "com.layer.messenger"
         minSdkVersion 14
-        targetSdkVersion 23
-        versionCode 37
+        targetSdkVersion 24
+        versionCode 40
         versionName "$versionCode"
     }
 
@@ -34,6 +34,10 @@ dependencies {
     // All flavors
     compile project(':layer-atlas')
 
+    compile "com.google.firebase:firebase-messaging:9.6.1"
+
     // Flavor-specific dependencies
-    providerdemoCompile 'com.google.android.gms:play-services-vision:9.2.0'
+    providerdemoCompile 'com.google.android.gms:play-services-vision:9.6.1'
 }
+
+apply plugin: 'com.google.gms.google-services'

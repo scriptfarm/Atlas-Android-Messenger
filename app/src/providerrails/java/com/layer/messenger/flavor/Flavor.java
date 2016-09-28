@@ -13,9 +13,6 @@ public class Flavor implements App.Flavor {
     // Set your Layer App ID from your Layer Developer Dashboard.
     public final static String LAYER_APP_ID = null;
 
-    // Set your Google Cloud Messaging Sender ID from your Google Developers Console. 
-    private final static String GCM_SENDER_ID = null;
-
     @Override
     public String getLayerAppId() {
         return (LAYER_APP_ID != null) ? LAYER_APP_ID : CustomEndpoint.getLayerAppId();
@@ -28,7 +25,7 @@ public class Flavor implements App.Flavor {
             if (Log.isLoggable(Log.ERROR)) Log.e(context.getString(R.string.app_id_required));
             return null;
         }
-        if (GCM_SENDER_ID != null) options.googleCloudMessagingSenderId(GCM_SENDER_ID);
+        options.useFirebaseCloudMessaging(true);
         CustomEndpoint.setLayerClientOptions(options);
         return LayerClient.newInstance(context, layerAppId, options);
     }
