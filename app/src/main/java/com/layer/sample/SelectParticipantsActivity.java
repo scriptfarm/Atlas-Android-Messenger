@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,15 +24,17 @@ import com.layer.sdk.query.Predicate;
 import com.layer.sdk.query.Query;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class SelectParticipantsActivity extends BaseActivity {
-    private static final String EXTRA_KEY_HAS_PARTICIPANTS = "hasParticipants";
+    private static final String EXTRA_KEY_CHECKED_PARTICIPANT_IDS = "checkedParticipantIds";
 
     private boolean mHasCheckedParticipants;
+    private Set<String> mCheckedParticipants;
     private ListView mParticipantList;
     private ParticipantAdapter mParticipantAdapter;
 
@@ -44,7 +47,11 @@ public class SelectParticipantsActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState != null) {
-            mHasCheckedParticipants = savedInstanceState.getBoolean(EXTRA_KEY_HAS_PARTICIPANTS);
+            String[] participantIdsArray = savedInstanceState.getStringArray(EXTRA_KEY_CHECKED_PARTICIPANT_IDS);
+            if (participantIdsArray != null && participantIdsArray.length > 0) {
+                mHasCheckedParticipants = true;
+                mCheckedParticipants = new HashSet<>(Arrays.asList(participantIdsArray));
+            }
         }
 
         // Fetch identities from database
@@ -74,7 +81,7 @@ public class SelectParticipantsActivity extends BaseActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBoolean(EXTRA_KEY_HAS_PARTICIPANTS, mHasCheckedParticipants);
+        outState.putStringArray(EXTRA_KEY_CHECKED_PARTICIPANT_IDS, getSelectedParticipantIds());
     }
 
     private void setUpParticipantAdapter(List<Identity> identities) {
@@ -82,17 +89,30 @@ public class SelectParticipantsActivity extends BaseActivity {
         mParticipantAdapter.addAll(identities);
     }
 
-    @SuppressWarnings("ConstantConditions")
     private void setUpParticipantList() {
         mParticipantList = (ListView) findViewById(R.id.participant_list);
+        // Clear choices since we are handling restoration manually
+        mParticipantList.clearChoices();
         mParticipantList.setAdapter(mParticipantAdapter);
+
         mParticipantList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                mHasCheckedParticipants = mParticipantList.getCheckedItemCount() != 0;
+                mHasCheckedParticipants = mParticipantList.getCheckedItemCount() > 0;
                 invalidateOptionsMenu();
             }
         });
+    }
+
+    private void restoreCheckedParticipants(List<Identity> sortedIdentities) {
+        if (mCheckedParticipants != null) {
+            for (int i = 0; i < sortedIdentities.size(); i++) {
+                Identity identity = sortedIdentities.get(i);
+                if (mCheckedParticipants.contains(identity.getUserId())) {
+                    mParticipantList.setItemChecked(i, true);
+                }
+            }
+        }
     }
 
     private void startConversationActivity() {
@@ -106,6 +126,10 @@ public class SelectParticipantsActivity extends BaseActivity {
         List<String> participantIds = new ArrayList<>(positions.size());
 
         for (int i = 0; i < positions.size(); i++) {
+            if (!positions.valueAt(i)) {
+                // Participant is not checked
+                continue;
+            }
             int checkedPosition = positions.keyAt(i);
             Identity participant = mParticipantAdapter.getItem(checkedPosition);
             if (participant != null) {
@@ -121,8 +145,10 @@ public class SelectParticipantsActivity extends BaseActivity {
         public void identitiesFetched(Set<Identity> identities) {
             List<Identity> sortedIdentities = new ArrayList<>(identities);
             Collections.sort(sortedIdentities, new IdentityDisplayNameComparator());
+
             setUpParticipantAdapter(sortedIdentities);
             setUpParticipantList();
+            restoreCheckedParticipants(sortedIdentities);
         }
     }
 
@@ -165,12 +191,13 @@ public class SelectParticipantsActivity extends BaseActivity {
 
     private static class ParticipantAdapter extends ArrayAdapter<Identity> {
 
-        public ParticipantAdapter(Context context) {
+        private ParticipantAdapter(Context context) {
             super(context, android.R.layout.simple_list_item_multiple_choice);
         }
 
+        @NonNull
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
             View v = super.getView(position, convertView, parent);
             CheckedTextView textView = (CheckedTextView) v;
             textView.setText(IdentityUtils.getDisplayName(getItem(position)));
