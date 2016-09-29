@@ -16,9 +16,6 @@ import com.layer.sample.messagelist.MessagesListActivity;
 import com.layer.sample.util.ConversationUtils;
 import com.layer.sample.util.Log;
 import com.layer.sdk.LayerClient;
-import com.layer.sdk.changes.LayerChange;
-import com.layer.sdk.changes.LayerChangeEvent;
-import com.layer.sdk.listeners.LayerChangeEventListener;
 import com.layer.sdk.messaging.Conversation;
 import com.layer.sdk.messaging.Message;
 import com.layer.sdk.messaging.PushNotificationPayload;
@@ -36,7 +33,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PushNotificationReceiver extends BroadcastReceiver {
@@ -59,7 +55,7 @@ public class PushNotificationReceiver extends BroadcastReceiver {
         Bundle extras = intent.getExtras();
         if (extras == null) return;
 
-        final PushNotificationPayload payload = PushNotificationPayload.fromGcmIntentExtras(extras);
+        final PushNotificationPayload payload = PushNotificationPayload.fromLayerPushExtras(extras);
         final Uri conversationId = extras.getParcelable(LAYER_CONVERSATION_KEY);
         final Uri messageId = extras.getParcelable(LAYER_MESSAGE_KEY);
 

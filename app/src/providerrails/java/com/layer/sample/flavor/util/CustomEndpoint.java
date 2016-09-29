@@ -198,8 +198,6 @@ public class CustomEndpoint {
         }
 
         public void setLayerClientOptions(LayerClient.Options options) {
-            if (mGcmSenderId != null) options.googleCloudMessagingSenderId(mGcmSenderId);
-
             if (mEndpointAuth != null) {
                 options.customEndpoint(mEndpointConf, mEndpointCert, mEndpointAuth, mEndpointSync);
             }

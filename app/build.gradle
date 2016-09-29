@@ -35,9 +35,13 @@ dependencies {
     compile 'com.android.support:design:24.2.1'
     compile 'com.android.support:gridlayout-v7:24.2.1'
 
-    compile 'com.layer.sdk:layer-sdk:0.22.0'
+    // This includes Firebase Messaging. To not support push notifications add
+    //   `exclude group: 'com.google.firebase', module: 'firebase-messaging'`
+    compile ('com.layer.sdk:layer-sdk:0.23.0')
     compile 'org.slf4j:slf4j-nop:1.5.8'
 
     // Flavor-specific dependencies
-    providerdemoCompile 'com.google.android.gms:play-services-vision:9.4.0'
+    providerdemoCompile 'com.google.android.gms:play-services-vision:9.6.1'
 }
+
+apply plugin: 'com.google.gms.google-services'
