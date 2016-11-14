@@ -19,6 +19,7 @@ import com.layer.messenger.R;
 import com.layer.messenger.flavor.util.CustomEndpoint;
 import com.layer.messenger.util.AuthenticationProvider;
 import com.layer.messenger.util.Log;
+import com.layer.messenger.util.Telemetry;
 
 public class RailsLoginActivity extends AppCompatActivity {
     EditText mEmail;
@@ -71,6 +72,10 @@ public class RailsLoginActivity extends AppCompatActivity {
     }
 
     private void login(final String email, final String password) {
+        if (Telemetry.isEnabled()) {
+            Telemetry.INSTANCE.beginScenario(Telemetry.Scenario.LOGIN_FIRST_SYNC_ITERATION);
+        }
+
         mEmail.setEnabled(false);
         mPassword.setEnabled(false);
         final ProgressDialog progressDialog = new ProgressDialog(RailsLoginActivity.this);
@@ -80,6 +85,10 @@ public class RailsLoginActivity extends AppCompatActivity {
                 new AuthenticationProvider.Callback() {
                     @Override
                     public void onSuccess(AuthenticationProvider provider, String userId) {
+                        if (Telemetry.isEnabled() && Telemetry.INSTANCE.isScenarioActive(Telemetry.Scenario.LOGIN_FIRST_SYNC_ITERATION)) {
+                            Telemetry.INSTANCE.addMarker(Telemetry.Scenario.LOGIN_FIRST_SYNC_ITERATION, "Received success from authentication callback");
+                        }
+
                         progressDialog.dismiss();
                         if (Log.isLoggable(Log.VERBOSE)) {
                             Log.v("Successfully authenticated as `" + email + "` with userId `" + userId + "`");

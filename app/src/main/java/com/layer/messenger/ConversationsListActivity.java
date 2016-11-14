@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -11,6 +12,7 @@ import com.layer.atlas.AtlasConversationsRecyclerView;
 import com.layer.atlas.adapters.AtlasConversationsAdapter;
 import com.layer.atlas.util.views.SwipeableItem;
 import com.layer.messenger.util.Log;
+import com.layer.messenger.util.Telemetry;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.messaging.Conversation;
 
@@ -80,6 +82,10 @@ public class ConversationsListActivity extends BaseActivity {
                     }
                 });
 
+        if (Telemetry.isEnabled()) {
+            addTelemetryMarkersForConversations();
+        }
+
         findViewById(R.id.floating_action_button)
                 .setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
@@ -109,5 +115,18 @@ public class ConversationsListActivity extends BaseActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void addTelemetryMarkersForConversations() {
+        if (Telemetry.INSTANCE.isScenarioActive(Telemetry.Scenario.LOGIN_FIRST_SYNC_ITERATION)) {
+            mConversationsList.getAdapter().registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+
+                @Override
+                public void onItemRangeInserted(int positionStart, int itemCount) {
+                    Telemetry.INSTANCE.endScenario(Telemetry.Scenario.LOGIN_FIRST_SYNC_ITERATION);
+                    mConversationsList.getAdapter().unregisterAdapterDataObserver(this);
+                }
+            });
+        }
     }
 }

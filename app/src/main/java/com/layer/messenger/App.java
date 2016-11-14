@@ -9,6 +9,7 @@ import com.layer.atlas.messagetypes.threepartimage.ThreePartImageUtils;
 import com.layer.atlas.util.Util;
 import com.layer.atlas.util.picasso.requesthandlers.MessagePartRequestHandler;
 import com.layer.messenger.util.AuthenticationProvider;
+import com.layer.messenger.util.Telemetry;
 import com.layer.sdk.LayerClient;
 import com.squareup.picasso.Picasso;
 
@@ -53,6 +54,8 @@ public class App extends Application {
             com.layer.messenger.util.Log.setAlwaysLoggable(true);
             LayerClient.setLoggingEnabled(this, true);
         }
+
+        Telemetry.setEnabled(true);
 
         // Allow the LayerClient to track app state
         LayerClient.applicationCreated(this);
