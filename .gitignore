@@ -7,3 +7,5 @@ captures
 *.iml
 app/build
 *.apk
+*.jks
+app/google-services.json
