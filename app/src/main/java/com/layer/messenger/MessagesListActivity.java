@@ -18,6 +18,7 @@ import com.layer.atlas.AtlasHistoricMessagesFetchLayout;
 import com.layer.atlas.AtlasMessageComposer;
 import com.layer.atlas.AtlasMessagesRecyclerView;
 import com.layer.atlas.AtlasTypingIndicator;
+import com.layer.atlas.messagetypes.audio.VoiceAttachmentSender;
 import com.layer.atlas.messagetypes.generic.GenericCellFactory;
 import com.layer.atlas.messagetypes.location.LocationCellFactory;
 import com.layer.atlas.messagetypes.location.LocationSender;
@@ -211,7 +212,8 @@ public class MessagesListActivity extends BaseActivity {
                 .addAttachmentSenders(
                         new CameraSender(R.string.attachment_menu_camera, R.drawable.ic_photo_camera_white_24dp, this),
                         new GallerySender(R.string.attachment_menu_gallery, R.drawable.ic_photo_white_24dp, this),
-                        new LocationSender(R.string.attachment_menu_location, R.drawable.ic_place_white_24dp, this))
+                        new LocationSender(R.string.attachment_menu_location, R.drawable.ic_place_white_24dp, this),
+                        new VoiceAttachmentSender("Voice",R.drawable.ic_mic_white_24dp, this))
                 .setOnMessageEditTextFocusChangeListener(new View.OnFocusChangeListener() {
                     @Override
                     public void onFocusChange(View v, boolean hasFocus) {
