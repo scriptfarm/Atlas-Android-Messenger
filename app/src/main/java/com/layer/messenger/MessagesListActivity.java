@@ -229,6 +229,13 @@ public class MessagesListActivity extends BaseActivity {
             if (intent.hasExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY)) {
                 Uri conversationId = intent.getParcelableExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY);
                 conversation = getLayerClient().getConversation(conversationId);
+                if (conversation == null) {
+                    try {
+                        conversation = getLayerClient().newConversation(getLayerClient().getAuthenticatedUser());
+                    } catch (LayerConversationException e) {
+                        conversation = e.getConversation();
+                    }
+                }
             } else if (intent.hasExtra("participantIds")) {
                 String[] participantIds = intent.getStringArrayExtra("participantIds");
                 try {

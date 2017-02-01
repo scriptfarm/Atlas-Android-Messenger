@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    package="com.layer.messenger"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.layer.messenger">
 
     <!-- GallerySender -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
@@ -13,12 +12,17 @@
     <!-- Layer SDK -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" android:maxSdkVersion="18"/>
-    <uses-permission android:name="android.permission.GET_TASKS" android:maxSdkVersion="20"/>
+    <uses-permission
+        android:name="android.permission.GET_ACCOUNTS"
+        android:maxSdkVersion="18"/>
+    <uses-permission
+        android:name="android.permission.GET_TASKS"
+        android:maxSdkVersion="20"/>
 
     <permission
         android:name="${applicationId}.permission.LAYER_PUSH"
         android:protectionLevel="signature"/>
+
     <uses-permission android:name="${applicationId}.permission.LAYER_PUSH"/>
 
     <application
@@ -27,13 +31,24 @@
         android:icon="@drawable/layer_launcher"
         android:label="@string/app_name"
         android:largeHeap="true"
-        android:theme="@style/AppTheme"
-        >
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:name=".activity.CrossfitHomeActivity"
+            android:label="@string/title_activity_crossfit_home"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
 
         <!-- Activity: List of Conversations -->
         <activity android:name=".ConversationsListActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
+
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
@@ -41,8 +56,7 @@
         <!-- Activity: Messages in a Conversation; AddressBar -->
         <activity
             android:name=".MessagesListActivity"
-            android:windowSoftInputMode="adjustResize"
-            >
+            android:windowSoftInputMode="adjustResize">
         </activity>
 
         <!-- Activity: Global app settings -->
@@ -71,12 +85,14 @@
             <!-- Layer SDK broadcasts this, which we use to generate notifications -->
             <intent-filter>
                 <action android:name="com.layer.sdk.PUSH"/>
+
                 <category android:name="${applicationId}"/>
             </intent-filter>
 
             <!-- Our app sets this as a PendingIntent to handle user notification swipe-outs -->
             <intent-filter>
                 <action android:name="${applicationId}.CANCEL_PUSH"/>
+
                 <category android:name="${applicationId}"/>
             </intent-filter>
         </receiver>
@@ -86,7 +102,7 @@
             android:name="com.layer.sdk.services.LayerFcmService"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
         <service
