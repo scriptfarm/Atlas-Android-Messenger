@@ -22,6 +22,7 @@ import com.layer.atlas.messagetypes.generic.GenericCellFactory;
 import com.layer.atlas.messagetypes.location.LocationCellFactory;
 import com.layer.atlas.messagetypes.location.LocationSender;
 import com.layer.atlas.messagetypes.singlepartimage.SinglePartImageCellFactory;
+import com.layer.atlas.messagetypes.teamfit.SKUPickerCellFactory;
 import com.layer.atlas.messagetypes.text.TextCellFactory;
 import com.layer.atlas.messagetypes.text.TextSender;
 import com.layer.atlas.messagetypes.threepartimage.CameraSender;
@@ -162,6 +163,7 @@ public class MessagesListActivity extends BaseActivity {
                 .init(getLayerClient(), getPicasso())
                 .addCellFactories(
                         new TextCellFactory(),
+                        new SKUPickerCellFactory(),
                         new ThreePartImageCellFactory(this, getLayerClient(), getPicasso()),
                         new LocationCellFactory(this, getPicasso()),
                         new SinglePartImageCellFactory(this, getLayerClient(), getPicasso()),

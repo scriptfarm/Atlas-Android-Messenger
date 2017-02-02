@@ -29,7 +29,7 @@
             android:id="@+id/button_manage_bookings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/rounded_button"
+            android:background="@drawable/rounded_background"
             android:layout_marginBottom="20dp"
             android:text="Manage your bookings"/>
 
@@ -37,7 +37,7 @@
             android:id="@+id/button_new_booking"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/rounded_button"
+            android:background="@drawable/rounded_background"
             android:text="Make a new booking"/>
 
     </LinearLayout>

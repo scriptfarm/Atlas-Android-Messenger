@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.util.Base64;
 import android.widget.Toast;
 
 import com.layer.messenger.R;
@@ -145,11 +146,12 @@ public class RailsAuthenticationProvider implements AuthenticationProvider<Rails
 
         try {
             // Post request
-            String url = "http://layer-identity-provider.herokuapp.com/users/sign_in.json";
+            String url = "https://teamfit-layer.herokuapp.com/authenticate";
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setDoInput(true);
             connection.setDoOutput(true);
             connection.setRequestMethod("POST");
+            connection.setRequestProperty("Authorization", "Bearer dz2F4vcYOr2HUhSnXmiXbBIg");
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("X_LAYER_APP_ID", credentials.getLayerAppId());
@@ -163,9 +165,9 @@ public class RailsAuthenticationProvider implements AuthenticationProvider<Rails
             // Credentials
             JSONObject rootObject = new JSONObject();
             JSONObject userObject = new JSONObject();
-            rootObject.put("user", userObject);
-            userObject.put("email", credentials.getEmail());
-            userObject.put("password", credentials.getPassword());
+            rootObject.put("user_id", credentials.getEmail());
+//            userObject.put("email", credentials.getEmail());
+//            userObject.put("password", credentials.getPassword());
             rootObject.put("nonce", nonce);
 
             connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
@@ -203,7 +205,7 @@ public class RailsAuthenticationProvider implements AuthenticationProvider<Rails
             replaceCredentials(authedCredentials);
 
             // Answer authentication challenge.
-            String identityToken = json.optString("layer_identity_token", null);
+            String identityToken = json.optString("identity_token", null);
             if (Log.isLoggable(Log.VERBOSE)) Log.v("Got identity token: " + identityToken);
             layerClient.answerAuthenticationChallenge(identityToken);
         } catch (Exception e) {
