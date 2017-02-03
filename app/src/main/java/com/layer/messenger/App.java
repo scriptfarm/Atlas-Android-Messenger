@@ -54,6 +54,7 @@ public class App extends Application {
             com.layer.atlas.util.Log.setLoggingEnabled(true);
             com.layer.messenger.util.Log.setAlwaysLoggable(true);
             LayerClient.setLoggingEnabled(this, true);
+            LayerClient.setPrivateLoggingEnabled(true);
 
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                     .detectAll()
