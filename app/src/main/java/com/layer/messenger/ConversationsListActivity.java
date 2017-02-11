@@ -62,7 +62,7 @@ public class ConversationsListActivity extends BaseActivity {
                 .setOnConversationSwipeListener(new SwipeableItem.OnSwipeListener<Conversation>() {
                     @Override
                     public void onSwipe(final Conversation conversation, int direction) {
-                        new AlertDialog.Builder(ConversationsListActivity.this)
+                        AlertDialog.Builder builder = new AlertDialog.Builder(ConversationsListActivity.this)
                                 .setMessage(R.string.alert_message_delete_conversation)
                                 .setNegativeButton(R.string.alert_button_cancel, new DialogInterface.OnClickListener() {
                                     @Override
@@ -72,19 +72,22 @@ public class ConversationsListActivity extends BaseActivity {
                                         dialog.dismiss();
                                     }
                                 })
-                                .setNeutralButton(R.string.alert_button_delete_my_devices, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        conversation.delete(LayerClient.DeletionMode.ALL_MY_DEVICES);
-                                    }
-                                })
                                 .setPositiveButton(R.string.alert_button_delete_all_participants, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         conversation.delete(LayerClient.DeletionMode.ALL_PARTICIPANTS);
                                     }
-                                })
-                                .show();
+                                });
+                        // User delete is only available if read receipts are enabled
+                        if (conversation.isReadReceiptsEnabled()) {
+                            builder.setNeutralButton(R.string.alert_button_delete_my_devices, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    conversation.delete(LayerClient.DeletionMode.ALL_MY_DEVICES);
+                                }
+                            });
+                        }
+                        builder.show();
                     }
                 });
 
