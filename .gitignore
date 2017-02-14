@@ -8,4 +8,7 @@ captures
 app/build
 *.apk
 *.jks
+<<<<<<< HEAD
 app/google-services.json
+=======
+>>>>>>> 1542287... Add file provider authority to MessagesListActivity
