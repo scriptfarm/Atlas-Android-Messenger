@@ -1,6 +1,7 @@
 package com.layer.messenger.flavor.util;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -98,7 +99,7 @@ public class CustomEndpoint {
         if (Log.isLoggable(Log.VERBOSE)) Log.v("Setting custom endpoint to: " + sEndpoint);
     }
 
-    private static Endpoint getEndpoint() {
+    public static Endpoint getEndpoint() {
         if (sEndpoint != null) return sEndpoint;
         String savedEndpointName = App.getInstance().getSharedPreferences("layer_custom_endpoint", Context.MODE_PRIVATE).getString("name", null);
         if (savedEndpointName == null) return null;
@@ -107,48 +108,52 @@ public class CustomEndpoint {
         return sEndpoint;
     }
 
+    @Nullable
     private static Map<String, Endpoint> getEndpoints() {
         if (sEndpoints != null) return sEndpoints;
         sEndpoints = new HashMap<String, Endpoint>();
 
         // Check for endpoints in resources
-        Context context = App.getInstance();
-        int resId = context.getResources().getIdentifier("layer_endpoints", "raw", context.getPackageName());
-        if (resId == 0) return null;
+        Context context = App.getInstance().getApplicationContext();
 
-        // Read endpoints from resources
-        Writer writer = new StringWriter();
-        char[] buffer = new char[1024];
-        InputStream is = context.getResources().openRawResource(resId);
         try {
-            Reader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-            int n;
-            while ((n = reader.read(buffer)) != -1) {
-                writer.write(buffer, 0, n);
-            }
-        } catch (Exception e) {
-            if (Log.isLoggable(Log.ERROR)) Log.e(e.getMessage(), e);
-        } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException e) {
-                    if (Log.isLoggable(Log.ERROR)) Log.e(e.getMessage(), e);
+            // Read endpoints from assets
+            Writer writer = new StringWriter();
+            char[] buffer = new char[1024];
+            InputStream is = context.getAssets().open("LayerConfiguration.json");
+            try {
+                Reader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+                int n;
+                while ((n = reader.read(buffer)) != -1) {
+                    writer.write(buffer, 0, n);
+                }
+            } catch (IOException e) {
+                if (Log.isLoggable(Log.ERROR)) Log.e(e.getMessage(), e);
+            } finally {
+                if (is != null) {
+                    try {
+                        is.close();
+                    } catch (IOException e) {
+                        if (Log.isLoggable(Log.ERROR)) Log.e(e.getMessage(), e);
+                    }
                 }
             }
-        }
-        String content = writer.toString().trim();
-        if (content.isEmpty()) return null;
+            String content = writer.toString().trim();
+            if (content.isEmpty()) return null;
 
-        // Parse endpoints from JSON
-        try {
-            JSONArray array = new JSONArray(content);
-            for (int i = 0; i < array.length(); i++) {
-                Endpoint endpoint = new Endpoint(array.getJSONObject(i));
-                sEndpoints.put(endpoint.getName(), endpoint);
+            // Parse endpoints from JSON
+            try {
+                JSONArray array = new JSONArray(content);
+                for (int i = 0; i < array.length(); i++) {
+                    Endpoint endpoint = new Endpoint(array.getJSONObject(i));
+                    sEndpoints.put(endpoint.getName(), endpoint);
+                }
+                return sEndpoints;
+            } catch (JSONException e) {
+                if (Log.isLoggable(Log.ERROR)) Log.e(e.getMessage(), e);
             }
-            return sEndpoints;
-        } catch (JSONException e) {
+
+        } catch (IOException e) {
             if (Log.isLoggable(Log.ERROR)) Log.e(e.getMessage(), e);
         }
         return null;
@@ -169,8 +174,8 @@ public class CustomEndpoint {
 
         public Endpoint(JSONObject o) throws JSONException {
             mName = o.getString("name");
-            mAppId = o.getString("appId");
-            mProviderUrl = o.getString("providerUrl");
+            mAppId = o.getString("app_id");
+            mProviderUrl = o.getString("identity_provider_url");
 
             JSONObject platform = o.optJSONObject("platform");
             if (platform != null) {
@@ -207,6 +212,10 @@ public class CustomEndpoint {
 
         public String getAppId() {
             return mAppId;
+        }
+
+        public String getProviderUrl() {
+            return mProviderUrl;
         }
 
         @Override
