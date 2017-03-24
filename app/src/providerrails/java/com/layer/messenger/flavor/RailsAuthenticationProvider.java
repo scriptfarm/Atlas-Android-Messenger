@@ -145,7 +145,7 @@ public class RailsAuthenticationProvider implements AuthenticationProvider<Rails
 
         try {
             // Post request
-            String url = "http://layer-identity-provider.herokuapp.com/users/sign_in.json";
+            String url = CustomEndpoint.getEndpoint().getProviderUrl();
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setDoInput(true);
             connection.setDoOutput(true);
