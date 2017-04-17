@@ -54,6 +54,7 @@
     <string name="settings_content_disk_kb">KB</string>
     <string name="settings_content_disk_b">B</string>
     <string name="settings_title_account">Account</string>
+    <string name="settings_title_presence">Presence</string>
     <string name="settings_button_log_out">Log Out</string>
     <string name="settings_title_notifications">Notifications</string>
     <string name="settings_switch_show_notifications">Show Notifications</string>
