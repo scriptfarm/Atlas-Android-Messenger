@@ -5,6 +5,8 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
@@ -15,6 +17,9 @@ import android.widget.Toast;
 
 import com.layer.atlas.AtlasAvatar;
 import com.layer.atlas.util.Util;
+import com.layer.messenger.util.ConversationSettingsTaskLoader;
+import com.layer.messenger.util.ConversationSettingsTaskLoader.Results;
+
 import com.layer.messenger.util.Log;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.changes.LayerChangeEvent;
@@ -22,12 +27,9 @@ import com.layer.sdk.exceptions.LayerException;
 import com.layer.sdk.listeners.LayerAuthenticationListener;
 import com.layer.sdk.listeners.LayerChangeEventListener;
 import com.layer.sdk.listeners.LayerConnectionListener;
-import com.layer.sdk.messaging.Conversation;
 import com.layer.sdk.messaging.Identity;
 
-import java.util.List;
-
-public class AppSettingsActivity extends BaseActivity implements LayerConnectionListener, LayerAuthenticationListener, LayerChangeEventListener, View.OnLongClickListener {
+public class AppSettingsActivity extends BaseActivity implements LayerConnectionListener, LayerAuthenticationListener, LayerChangeEventListener, View.OnLongClickListener, LoaderManager.LoaderCallbacks<Results> {
     /* Account */
     private AtlasAvatar mAvatar;
     private TextView mUserName;
@@ -81,7 +83,11 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         mDiskUtilization = (TextView) findViewById(R.id.disk_utilization);
         mDiskAllowance = (TextView) findViewById(R.id.disk_allowance);
         mAutoDownloadMimeTypes = (TextView) findViewById(R.id.auto_download_mime_types);
+
+
         mAvatar.init(getPicasso());
+
+        getSupportLoaderManager().initLoader(R.id.setting_loader_id, null, this);
 
         // Long-click copy-to-clipboard
         mUserName.setOnLongClickListener(this);
@@ -177,6 +183,19 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
     }
 
     @Override
+    public Loader<Results> onCreateLoader(int id, Bundle args) {
+        return new ConversationSettingsTaskLoader(getApplicationContext());
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Results> loader, Results data) {
+        setUpConversationCount(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Results> loader) {}
+
+    @Override
     protected void onResume() {
         super.onResume();
         getLayerClient()
@@ -238,18 +257,6 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
             mUserId.setText(R.string.settings_not_authenticated);
         }
 
-        /* Statistics */
-        long totalMessages = 0;
-        long totalUnread = 0;
-        List<Conversation> conversations = getLayerClient().getConversations();
-        for (Conversation conversation : conversations) {
-            totalMessages += conversation.getTotalMessageCount();
-            totalUnread += conversation.getTotalUnreadMessageCount();
-        }
-        mConversationCount.setText(String.format("%d", conversations.size()));
-        mMessageCount.setText(String.format("%d", totalMessages));
-        mUnreadMessageCount.setText(String.format("%d", totalUnread));
-
         /* Rich Content */
         mDiskUtilization.setText(readableByteFormat(getLayerClient().getDiskUtilization()));
         long allowance = getLayerClient().getDiskCapacity();
@@ -259,6 +266,13 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
             mDiskAllowance.setText(readableByteFormat(allowance));
         }
         mAutoDownloadMimeTypes.setText(TextUtils.join("\n", getLayerClient().getAutoDownloadMimeTypes()));
+    }
+
+    private void setUpConversationCount(Results results) {
+
+        mConversationCount.setText(String.format("%d", results.getConversationCount()));
+        mMessageCount.setText(String.format("%d", results.getTotalMessages()));
+        mUnreadMessageCount.setText(String.format("%d", results.getTotalUnreadMessages()));
     }
 
     private String readableByteFormat(long bytes) {

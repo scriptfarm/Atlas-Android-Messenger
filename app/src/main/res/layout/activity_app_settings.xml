@@ -1,6 +1,6 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,7 +18,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="@string/settings_title_account"
-                android:textAppearance="?android:attr/textAppearanceLarge"/>
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
 
         <LinearLayout
@@ -32,7 +32,7 @@
                 android:id="@+id/avatar"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_gravity="center_vertical"/>
+                android:layout_gravity="center_vertical" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -46,14 +46,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="[username]"
-                    android:textAppearance="?android:attr/textAppearanceMedium"/>
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
 
                 <TextView
                     android:id="@+id/user_state"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="[connection state]"
-                    android:textAppearance="?android:attr/textAppearanceSmall"/>
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
 
             </LinearLayout>
 
@@ -67,12 +67,12 @@
             android:layout_gravity="right"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            android:text="@string/settings_button_log_out"/>
+            android:text="@string/settings_button_log_out" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/atlas_view_divider"/>
+            android:background="@color/atlas_view_divider" />
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -85,7 +85,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="@string/settings_title_notifications"
-                android:textAppearance="?android:attr/textAppearanceLarge"/>
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
 
         <LinearLayout
@@ -103,20 +103,20 @@
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:text="@string/settings_switch_show_notifications"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <Switch
                 android:id="@+id/show_notifications_switch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"/>
+                android:layout_gravity="center_vertical" />
 
         </LinearLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/atlas_view_divider"/>
+            android:background="@color/atlas_view_divider" />
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -129,7 +129,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="@string/settings_title_debug"
-                android:textAppearance="?android:attr/textAppearanceLarge"/>
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
 
         <LinearLayout
@@ -147,13 +147,13 @@
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:text="@string/settings_switch_verbose_logging"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <Switch
                 android:id="@+id/logging_switch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"/>
+                android:layout_gravity="center_vertical" />
 
         </LinearLayout>
 
@@ -169,14 +169,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings_title_app_version"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/app_version"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="[app version]"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </LinearLayout>
 
@@ -192,14 +192,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings_title_atlas_version"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/atlas_version"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="[atlas version]"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </LinearLayout>
 
@@ -215,14 +215,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings_title_layer_version"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/layer_version"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="[layer version]"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </LinearLayout>
 
@@ -238,14 +238,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings_title_android_version"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/android_version"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="[android version]"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </LinearLayout>
 
@@ -261,21 +261,21 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings_title_user_id"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/user_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="[user id]"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </LinearLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/atlas_view_divider"/>
+            android:background="@color/atlas_view_divider" />
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -288,7 +288,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="@string/settings_title_statistics"
-                android:textAppearance="?android:attr/textAppearanceLarge"/>
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
 
         <LinearLayout
@@ -303,14 +303,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings_title_conversations"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/conversation_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="[conversation count]"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:text="@string/settings_message_placeholder"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </LinearLayout>
 
@@ -326,14 +326,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings_title_messages"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/message_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="[message count]"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:text="@string/settings_message_placeholder"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+
 
         </LinearLayout>
 
@@ -349,21 +350,21 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings_title_unread_messages"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/unread_message_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="[unread message count]"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:text="@string/settings_message_placeholder"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </LinearLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/atlas_view_divider"/>
+            android:background="@color/atlas_view_divider" />
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -376,7 +377,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="@string/settings_title_rich_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"/>
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>
 
         <LinearLayout
@@ -391,14 +392,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings_title_disk_utilization"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/disk_utilization"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="[disk utilization]"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </LinearLayout>
 
@@ -414,14 +415,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings_title_disk_allowance"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/disk_allowance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="[disk allowance]"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </LinearLayout>
 
@@ -439,7 +440,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings_title_auto_download_types"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/auto_download_mime_types"
@@ -447,7 +448,7 @@
                 android:layout_height="wrap_content"
                 android:singleLine="false"
                 android:text="[auto download types]"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </LinearLayout>
     </LinearLayout>
