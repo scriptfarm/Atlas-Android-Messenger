@@ -9,6 +9,8 @@ import com.layer.atlas.messagetypes.text.TextCellFactory;
 import com.layer.atlas.messagetypes.threepartimage.ThreePartImageUtils;
 import com.layer.atlas.util.Util;
 import com.layer.atlas.util.picasso.requesthandlers.MessagePartRequestHandler;
+import com.layer.messenger.util.LayerAuthenticationProvider;
+import com.layer.messenger.util.CustomEndpoint;
 import com.layer.messenger.util.AuthenticationProvider;
 import com.layer.messenger.util.Log;
 import com.layer.sdk.LayerClient;
@@ -19,27 +21,19 @@ import java.util.Arrays;
 /**
  * App provides static access to a LayerClient and other Atlas and Messenger context, including
  * AuthenticationProvider, ParticipantProvider, Participant, and Picasso.
- *
- * App.Flavor allows build variants to target different environments, such as the Atlas Demo and the
- * open source Rails Identity Provider.  Switch flavors with the Android Studio `Build Variant` tab.
- * When using a flavor besides the Atlas Demo you must manually set your Layer App ID and GCM Sender
- * ID in that flavor's Flavor.java.
- *
- * @see com.layer.messenger.App.Flavor
- * @see com.layer.messenger.flavor.Flavor
  * @see LayerClient
  * @see Picasso
  * @see AuthenticationProvider
  */
 public class App extends Application {
 
-    private static Application sInstance;
-    private static Flavor sFlavor = new com.layer.messenger.flavor.Flavor();
+    // Set your Layer App ID from your Layer Developer Dashboard.
+    public final static String LAYER_APP_ID = null;
 
+    private static Application sInstance;
     private static LayerClient sLayerClient;
     private static AuthenticationProvider sAuthProvider;
     private static Picasso sPicasso;
-
 
     //==============================================================================================
     // Application Overrides
@@ -142,12 +136,10 @@ public class App extends Application {
     //==============================================================================================
 
     /**
-     * Gets or creates a LayerClient, using a default set of LayerClient.Options and flavor-specific
-     * App ID and Options from the `generateLayerClient` method.  Returns `null` if the flavor was
-     * unable to create a LayerClient (due to no App ID, etc.).
-     *
+     * Gets or creates a LayerClient, using a default set of LayerClient.Options
+     * App ID and Options from the `generateLayerClient` method.  Returns `null` if the App was
+     * unable to create a LayerClient (due to no App ID, etc.). Set App Id {@link App.LAYER_APP_ID}
      * @return New or existing LayerClient, or `null` if a LayerClient could not be constructed.
-     * @see Flavor#generateLayerClient(Context, LayerClient.Options)
      */
     public static LayerClient getLayerClient() {
         if (sLayerClient == null) {
@@ -163,10 +155,9 @@ public class App extends Application {
                             ThreePartImageUtils.MIME_TYPE_INFO,
                             ThreePartImageUtils.MIME_TYPE_PREVIEW));
 
-            // Allow flavor to specify Layer App ID and customize Options.
-            sLayerClient = sFlavor.generateLayerClient(sInstance, options);
+            sLayerClient = generateLayerClient(sInstance, options);
 
-            // Flavor was unable to generate Layer Client (no App ID, etc.)
+            // Unable to generate Layer Client (no App ID, etc.)
             if (sLayerClient == null) return null;
 
             /* Register AuthenticationProvider for handling authentication challenges */
@@ -175,13 +166,9 @@ public class App extends Application {
         return sLayerClient;
     }
 
-    public static String getLayerAppId() {
-        return sFlavor.getLayerAppId();
-    }
-
     public static AuthenticationProvider getAuthenticationProvider() {
         if (sAuthProvider == null) {
-            sAuthProvider = sFlavor.generateAuthenticationProvider(sInstance);
+            sAuthProvider = generateAuthenticationProvider(sInstance);
 
             // If we have cached credentials, try authenticating with Layer
             LayerClient layerClient = getLayerClient();
@@ -200,16 +187,23 @@ public class App extends Application {
         return sPicasso;
     }
 
-    /**
-     * Flavor is used by Atlas Messenger to switch environments.
-     *
-     * @see com.layer.messenger.flavor.Flavor
-     */
-    public interface Flavor {
-        String getLayerAppId();
-
-        LayerClient generateLayerClient(Context context, LayerClient.Options options);
-
-        AuthenticationProvider generateAuthenticationProvider(Context context);
+    public static String getLayerAppId() {
+        return (LAYER_APP_ID != null) ? LAYER_APP_ID : CustomEndpoint.getLayerAppId();
     }
+
+    private static LayerClient generateLayerClient(Context context, LayerClient.Options options) {
+        String layerAppId = getLayerAppId();
+        if (layerAppId == null) {
+            if (Log.isLoggable(Log.ERROR)) Log.e(context.getString(R.string.app_id_required));
+            return null;
+        }
+        options.useFirebaseCloudMessaging(true);
+        CustomEndpoint.setLayerClientOptions(options);
+        return LayerClient.newInstance(context, layerAppId, options);
+    }
+
+    private static AuthenticationProvider generateAuthenticationProvider(Context context) {
+        return new LayerAuthenticationProvider(context);
+    }
+
 }

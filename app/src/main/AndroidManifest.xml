@@ -66,6 +66,10 @@
             android:windowSoftInputMode="adjustResize">
         </activity>
 
+        <activity
+            android:name=".LoginActivity"
+            android:windowSoftInputMode="stateAlwaysVisible|adjustResize"/>
+
         <!-- Receiver: Our app notification handling -->
         <receiver
             android:name=".PushNotificationReceiver"

@@ -1,14 +1,14 @@
-package com.layer.messenger.flavor;
+package com.layer.messenger.util;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
+import android.widget.Toast;
 
+import com.layer.messenger.R;
+import com.layer.messenger.LoginActivity;
 import com.layer.messenger.ResumeActivity;
-import com.layer.messenger.util.AuthenticationProvider;
-import com.layer.messenger.util.Log;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.exceptions.LayerException;
 
@@ -22,30 +22,25 @@ import java.net.URL;
 
 import static com.layer.messenger.util.Util.streamToString;
 
-public class DemoAuthenticationProvider implements AuthenticationProvider<DemoAuthenticationProvider.Credentials> {
+public class LayerAuthenticationProvider implements AuthenticationProvider<LayerAuthenticationProvider.Credentials> {
+    private static final String TAG = LayerAuthenticationProvider.class.getSimpleName();
+
     private final SharedPreferences mPreferences;
     private Callback mCallback;
 
-    public DemoAuthenticationProvider(Context context) {
-        mPreferences = context.getSharedPreferences(DemoAuthenticationProvider.class.getSimpleName(), Context.MODE_PRIVATE);
+    public LayerAuthenticationProvider(Context context) {
+        mPreferences = context.getSharedPreferences(TAG, Context.MODE_PRIVATE);
     }
 
     @Override
     public AuthenticationProvider<Credentials> setCredentials(Credentials credentials) {
-        if (credentials == null) {
-            mPreferences.edit().clear().commit();
-            return this;
-        }
-        mPreferences.edit()
-                .putString("appId", credentials.getLayerAppId())
-                .putString("name", credentials.getUserName())
-                .commit();
+        replaceCredentials(credentials);
         return this;
     }
 
     @Override
     public boolean hasCredentials() {
-        return mPreferences.contains("appId");
+        return getCredentials() != null;
     }
 
     @Override
@@ -58,9 +53,7 @@ public class DemoAuthenticationProvider implements AuthenticationProvider<DemoAu
     public void onAuthenticated(LayerClient layerClient, String userId) {
         if (Log.isLoggable(Log.VERBOSE)) Log.v("Authenticated with Layer, user ID: " + userId);
         layerClient.connect();
-        if (mCallback != null) {
-            mCallback.onSuccess(this, userId);
-        }
+        if (mCallback != null) mCallback.onSuccess(this, userId);
     }
 
     @Override
@@ -78,26 +71,22 @@ public class DemoAuthenticationProvider implements AuthenticationProvider<DemoAu
     public void onAuthenticationError(LayerClient layerClient, LayerException e) {
         String error = "Failed to authenticate with Layer: " + e.getMessage();
         if (Log.isLoggable(Log.ERROR)) Log.e(error, e);
-        if (mCallback != null) {
-            mCallback.onError(this, error);
-        }
+        if (mCallback != null) mCallback.onError(this, error);
     }
 
     @Override
     public boolean routeLogin(LayerClient layerClient, String layerAppId, Activity from) {
-        if (layerAppId == null) {
-            // No App ID: must scan from QR code.
-            if (Log.isLoggable(Log.VERBOSE)) Log.v("Routing to QR Code scanning Activity");
-            Intent intent = new Intent(from, DemoAtlasIdScannerActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            from.startActivity(intent);
-            return true;
-        }
-
         if ((layerClient != null) && layerClient.isAuthenticated()) {
             // The LayerClient is authenticated: no action required.
             if (Log.isLoggable(Log.VERBOSE)) Log.v("No authentication routing required");
             return false;
+        }
+
+        if (layerAppId == null && !CustomEndpoint.hasEndpoints()) {
+            // With no Layer App ID (and no CustomEndpoint) we can't authenticate: bail out.
+            if (Log.isLoggable(Log.ERROR)) Log.v("No Layer App ID set");
+            Toast.makeText(from, R.string.app_id_required, Toast.LENGTH_LONG).show();
+            return true;
         }
 
         if ((layerClient != null) && hasCredentials()) {
@@ -108,22 +97,44 @@ public class DemoAuthenticationProvider implements AuthenticationProvider<DemoAu
             Intent intent = new Intent(from, ResumeActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.putExtra(ResumeActivity.EXTRA_LOGGED_IN_ACTIVITY_CLASS_NAME, from.getClass().getName());
-            intent.putExtra(ResumeActivity.EXTRA_LOGGED_OUT_ACTIVITY_CLASS_NAME, DemoLoginActivity.class.getName());
+            intent.putExtra(ResumeActivity.EXTRA_LOGGED_OUT_ACTIVITY_CLASS_NAME, LoginActivity.class.getName());
             from.startActivity(intent);
             return true;
         }
 
         // We have a Layer App ID but no cached provider credentials: routing to Login required.
         if (Log.isLoggable(Log.VERBOSE)) Log.v("Routing to login Activity");
-        Intent intent = new Intent(from, DemoLoginActivity.class);
+        Intent intent = new Intent(from, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         from.startActivity(intent);
         return true;
     }
 
+    private void replaceCredentials(Credentials credentials) {
+        if (credentials == null) {
+            mPreferences.edit().clear().commit();
+            return;
+        }
+        mPreferences.edit()
+                .putString("appId", credentials.getLayerAppId())
+                .putString("email", credentials.getEmail())
+                .putString("password", credentials.getPassword())
+                .putString("authToken", credentials.getAuthToken())
+                .commit();
+    }
+
+    protected Credentials getCredentials() {
+        if (!mPreferences.contains("appId")) return null;
+        return new Credentials(
+                mPreferences.getString("appId", null),
+                mPreferences.getString("email", null),
+                mPreferences.getString("password", null),
+                mPreferences.getString("authToken", null));
+    }
+
     private void respondToChallenge(LayerClient layerClient, String nonce) {
-        Credentials credentials = new Credentials(mPreferences.getString("appId", null), mPreferences.getString("name", null));
-        if (credentials.getUserName() == null || credentials.getLayerAppId() == null) {
+        Credentials credentials = getCredentials();
+        if (credentials == null || credentials.getEmail() == null || (credentials.getPassword() == null && credentials.getAuthToken() == null) || credentials.getLayerAppId() == null) {
             if (Log.isLoggable(Log.WARN)) {
                 Log.w("No stored credentials to respond to challenge with");
             }
@@ -132,7 +143,7 @@ public class DemoAuthenticationProvider implements AuthenticationProvider<DemoAu
 
         try {
             // Post request
-            String url = "https://layer-identity-provider.herokuapp.com/apps/" + credentials.getLayerAppId() + "/atlas_identities";
+            String url = CustomEndpoint.getEndpoint().getProviderUrl();
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setDoInput(true);
             connection.setDoOutput(true);
@@ -140,11 +151,20 @@ public class DemoAuthenticationProvider implements AuthenticationProvider<DemoAu
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("X_LAYER_APP_ID", credentials.getLayerAppId());
+            if (credentials.getEmail() != null) {
+                connection.setRequestProperty("X_AUTH_EMAIL", credentials.getEmail());
+            }
+            if (credentials.getAuthToken() != null) {
+                connection.setRequestProperty("X_AUTH_TOKEN", credentials.getAuthToken());
+            }
 
             // Credentials
-            JSONObject rootObject = new JSONObject()
-                    .put("nonce", nonce)
-                    .put("name", credentials.getUserName());
+            JSONObject rootObject = new JSONObject();
+            JSONObject userObject = new JSONObject();
+            rootObject.put("user", userObject);
+            userObject.put("email", credentials.getEmail());
+            userObject.put("password", credentials.getPassword());
+            rootObject.put("nonce", nonce);
 
             connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
 
@@ -156,7 +176,7 @@ public class DemoAuthenticationProvider implements AuthenticationProvider<DemoAu
             int statusCode = connection.getResponseCode();
             if (statusCode != HttpURLConnection.HTTP_OK && statusCode != HttpURLConnection.HTTP_CREATED) {
                 String error = String.format("Got status %d when requesting authentication for '%s' with nonce '%s' from '%s'",
-                        statusCode, credentials.getUserName(), nonce, url);
+                        statusCode, credentials.getEmail(), nonce, url);
                 if (Log.isLoggable(Log.ERROR)) Log.e(error);
                 if (mCallback != null) mCallback.onError(this, error);
                 return;
@@ -175,8 +195,13 @@ public class DemoAuthenticationProvider implements AuthenticationProvider<DemoAu
                 return;
             }
 
+            // Save provider's auth token and remove plain-text password.
+            String authToken = json.optString("authentication_token", null);
+            Credentials authedCredentials = new Credentials(credentials.getLayerAppId(), credentials.getEmail(), null, authToken);
+            replaceCredentials(authedCredentials);
+
             // Answer authentication challenge.
-            String identityToken = json.optString("identity_token", null);
+            String identityToken = json.optString("layer_identity_token", null);
             if (Log.isLoggable(Log.VERBOSE)) Log.v("Got identity token: " + identityToken);
             layerClient.answerAuthenticationChallenge(identityToken);
         } catch (Exception e) {
@@ -188,19 +213,27 @@ public class DemoAuthenticationProvider implements AuthenticationProvider<DemoAu
 
     public static class Credentials {
         private final String mLayerAppId;
-        private final String mUserName;
+        private final String mEmail;
+        private final String mPassword;
+        private final String mAuthToken;
 
-        public Credentials(Uri layerAppId, String userName) {
-            this(layerAppId == null ? null : layerAppId.getLastPathSegment(), userName);
-        }
-
-        public Credentials(String layerAppId, String userName) {
+        public Credentials(String layerAppId, String email, String password, String authToken) {
             mLayerAppId = layerAppId == null ? null : (layerAppId.contains("/") ? layerAppId.substring(layerAppId.lastIndexOf("/") + 1) : layerAppId);
-            mUserName = userName;
+            mEmail = email;
+            mPassword = password;
+            mAuthToken = authToken;
         }
 
-        public String getUserName() {
-            return mUserName;
+        public String getEmail() {
+            return mEmail;
+        }
+
+        public String getPassword() {
+            return mPassword;
+        }
+
+        public String getAuthToken() {
+            return mAuthToken;
         }
 
         public String getLayerAppId() {
