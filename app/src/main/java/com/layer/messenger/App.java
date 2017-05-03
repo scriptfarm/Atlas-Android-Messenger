@@ -155,6 +155,7 @@ public class App extends Application {
                             ThreePartImageUtils.MIME_TYPE_INFO,
                             ThreePartImageUtils.MIME_TYPE_PREVIEW));
 
+            options.setTelemetryEnabled(false);
             sLayerClient = generateLayerClient(sInstance, options);
 
             // Unable to generate Layer Client (no App ID, etc.)
@@ -193,6 +194,7 @@ public class App extends Application {
 
     private static LayerClient generateLayerClient(Context context, LayerClient.Options options) {
         String layerAppId = getLayerAppId();
+        LayerClient.setLoggingEnabled(context, true);
         if (layerAppId == null) {
             if (Log.isLoggable(Log.ERROR)) Log.e(context.getString(R.string.app_id_required));
             return null;
