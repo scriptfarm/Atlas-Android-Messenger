@@ -1,4 +1,4 @@
-package com.layer.messenger.flavor;
+package com.layer.messenger;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -13,14 +13,12 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.layer.messenger.App;
-import com.layer.messenger.ConversationsListActivity;
-import com.layer.messenger.R;
-import com.layer.messenger.flavor.util.CustomEndpoint;
+import com.layer.messenger.util.LayerAuthenticationProvider;
+import com.layer.messenger.util.CustomEndpoint;
 import com.layer.messenger.util.AuthenticationProvider;
 import com.layer.messenger.util.Log;
 
-public class RailsLoginActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
     EditText mEmail;
     EditText mPassword;
 
@@ -54,7 +52,7 @@ public class RailsLoginActivity extends AppCompatActivity {
         });
 
         // Optionally add a CustomEndpoint Spinner (not typical)
-        if (Flavor.LAYER_APP_ID == null) {
+        if (App.LAYER_APP_ID == null) {
             Spinner customEndpoints = CustomEndpoint.createSpinner(this);
             if (customEndpoints != null) {
                 customEndpoints.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -77,10 +75,10 @@ public class RailsLoginActivity extends AppCompatActivity {
 
         mEmail.setEnabled(false);
         mPassword.setEnabled(false);
-        final ProgressDialog progressDialog = new ProgressDialog(RailsLoginActivity.this);
+        final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this);
         progressDialog.setMessage(getResources().getString(R.string.login_dialog_message));
         progressDialog.show();
-        App.authenticate(new RailsAuthenticationProvider.Credentials(App.getLayerAppId(), email, password, null),
+        App.authenticate(new LayerAuthenticationProvider.Credentials(App.getLayerAppId(), email, password, null),
                 new AuthenticationProvider.Callback() {
                     @Override
                     public void onSuccess(AuthenticationProvider provider, String userId) {
@@ -88,13 +86,14 @@ public class RailsLoginActivity extends AppCompatActivity {
                             Log.perf("LoginActivity received success callback for login attempt");
                         }
 
+                        provider.setCallback(null);
                         progressDialog.dismiss();
                         if (Log.isLoggable(Log.VERBOSE)) {
                             Log.v("Successfully authenticated as `" + email + "` with userId `" + userId + "`");
                         }
-                        Intent intent = new Intent(RailsLoginActivity.this, ConversationsListActivity.class);
+                        Intent intent = new Intent(LoginActivity.this, ConversationsListActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        RailsLoginActivity.this.startActivity(intent);
+                        LoginActivity.this.startActivity(intent);
                     }
 
                     @Override
@@ -103,10 +102,12 @@ public class RailsLoginActivity extends AppCompatActivity {
                         if (Log.isLoggable(Log.ERROR)) {
                             Log.e("Failed to authenticate as `" + email + "`: " + error);
                         }
+
+                        provider.setCallback(null);
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(RailsLoginActivity.this, error, Toast.LENGTH_LONG).show();
+                                Toast.makeText(LoginActivity.this, error, Toast.LENGTH_LONG).show();
                                 mEmail.setEnabled(true);
                                 mPassword.setEnabled(true);
                             }

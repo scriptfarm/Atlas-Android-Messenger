@@ -84,6 +84,41 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
+                android:text="@string/settings_title_presence"
+                android:textAppearance="?android:attr/textAppearanceLarge"/>
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:orientation="horizontal"
+            android:weightSum="1">
+
+            <Spinner
+                android:id="@+id/presence_spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"/>
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/atlas_view_divider"/>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
                 android:text="@string/settings_title_notifications"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
         </FrameLayout>

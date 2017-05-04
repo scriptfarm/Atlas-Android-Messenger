@@ -1,4 +1,4 @@
-package com.layer.messenger.flavor.util;
+package com.layer.messenger.util;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
@@ -34,7 +34,7 @@ import java.util.Set;
  * This is only useful for enterprise customers with custom endpoints.  Contact support@layer.com
  * for information.
  *
- * @see com.layer.sdk.LayerClient.Options#customEndpoint(String, String, String, String)
+ * @see LayerClient.Options#customEndpoint(String, String, String, String)
  */
 public class CustomEndpoint {
     private static Endpoint sEndpoint;
@@ -150,7 +150,9 @@ public class CustomEndpoint {
                 }
                 return sEndpoints;
             } catch (JSONException e) {
-                if (Log.isLoggable(Log.ERROR)) Log.e(e.getMessage(), e);
+                String errorMessage = "Unable to parse the LayerConfiguration.json file. Please ensure the formatting is correct.";
+                if (Log.isLoggable(Log.ERROR)) Log.e(errorMessage, e);
+                throw new IllegalStateException(errorMessage, e);
             }
 
         } catch (IOException e) {

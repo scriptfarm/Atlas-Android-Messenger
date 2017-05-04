@@ -23,7 +23,7 @@ import android.widget.Toast;
 
 import com.layer.atlas.AtlasAvatar;
 import com.layer.atlas.util.IdentityDisplayNameComparator;
-import com.layer.atlas.util.Util;
+import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.changes.LayerChangeEvent;
 import com.layer.sdk.listeners.LayerChangeEventListener;
@@ -244,7 +244,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
         @Override
         public void onBindViewHolder(ViewHolder viewHolder, int position) {
             Identity participant = mParticipants.get(position);
-            viewHolder.mTitle.setText(Util.getDisplayName(participant));
+            viewHolder.mTitle.setText(com.layer.atlas.util.Util.getDisplayName(participant));
             viewHolder.mAvatar.setParticipants(participant);
             viewHolder.mParticipant = participant;
 

@@ -54,6 +54,7 @@
     <string name="settings_content_disk_kb">KB</string>
     <string name="settings_content_disk_b">B</string>
     <string name="settings_title_account">Account</string>
+    <string name="settings_title_presence">Presence</string>
     <string name="settings_button_log_out">Log Out</string>
     <string name="settings_title_notifications">Notifications</string>
     <string name="settings_switch_show_notifications">Show Notifications</string>
@@ -78,5 +79,11 @@
     <string name="notifications_new_messages">%1$d new messages</string>
 
     <string name="push_notification_no_content_title">New message (tap to sync)</string>
+    <string name="app_name">Atlas Messenger</string>
+    <string name="app_id_required">Please set your Layer App ID in App.java.  You can get your Layer App ID from the developer dashboard.</string>
+
+    <string name="login_email_hint">Email</string>
+    <string name="login_password_hint">Password</string>
+    <string name="login_dialog_message">Logging In&#8230;</string>
     <string name="settings_message_placeholder">Calculating...</string>
 </resources>
