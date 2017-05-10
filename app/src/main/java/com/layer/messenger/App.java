@@ -3,6 +3,7 @@ package com.layer.messenger;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.StrictMode;
 
 import com.layer.atlas.messagetypes.text.TextCellFactory;
@@ -29,6 +30,9 @@ public class App extends Application {
 
     // Set your Layer App ID from your Layer Developer Dashboard.
     public final static String LAYER_APP_ID = null;
+
+    public static final String SHARED_PREFS = "MESSENGER_SHARED_PREFS";
+    public static final String SHARED_PREFS_KEY_TELEMETRY_ENABLED = "TELEMETRY_ENABLED";
 
     private static Application sInstance;
     private static LayerClient sLayerClient;
@@ -143,6 +147,16 @@ public class App extends Application {
      */
     public static LayerClient getLayerClient() {
         if (sLayerClient == null) {
+            boolean telemetryEnabled;
+            SharedPreferences sharedPreferences = sInstance.getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+            if (sharedPreferences.contains(SHARED_PREFS_KEY_TELEMETRY_ENABLED)) {
+                telemetryEnabled = sharedPreferences.getBoolean(SHARED_PREFS_KEY_TELEMETRY_ENABLED, true);
+            }
+            else {
+                sharedPreferences.edit().putBoolean(SHARED_PREFS_KEY_TELEMETRY_ENABLED, true).apply();
+                telemetryEnabled = true;
+            }
+
             // Custom options for constructing a LayerClient
             LayerClient.Options options = new LayerClient.Options()
 
@@ -153,9 +167,9 @@ public class App extends Application {
                     .autoDownloadMimeTypes(Arrays.asList(
                             TextCellFactory.MIME_TYPE,
                             ThreePartImageUtils.MIME_TYPE_INFO,
-                            ThreePartImageUtils.MIME_TYPE_PREVIEW));
+                            ThreePartImageUtils.MIME_TYPE_PREVIEW))
+                    .setTelemetryEnabled(telemetryEnabled);
 
-            options.setTelemetryEnabled(false);
             sLayerClient = generateLayerClient(sInstance, options);
 
             // Unable to generate Layer Client (no App ID, etc.)
