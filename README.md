@@ -45,6 +45,9 @@ To do this, please follow the push notification setup steps [here](https://docs.
 * Remove the `google-services` plugin in the necessary `build.gradle` files.
 * Set `options.useFirebaseCloudMessaging(true)` to false in `App.generateLayerClient()`
 
+## Building and releasing
+Ensure that the apk is signed using at least signing `v1` (and optionally `v2`). Not signing with `v1` will result in a certificate not found error on devices below Android 7.0
+
 
 ## <a name="contributing"></a>Contributing
 Atlas is an Open Source project maintained by Layer. Feedback and contributions are always welcome and the maintainers try to process patches as quickly as possible. Feel free to open up a Pull Request or Issue on Github.
