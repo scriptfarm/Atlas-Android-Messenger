@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.layer.atlas.AtlasConversationsRecyclerView;
+import com.layer.atlas.ConversationsRecyclerView;
 import com.layer.atlas.adapters.ConversationsAdapter;
 import com.layer.atlas.messagetypes.location.LocationCellFactory;
 import com.layer.atlas.messagetypes.singlepartimage.SinglePartImageCellFactory;
@@ -20,7 +20,7 @@ import com.layer.sdk.messaging.Conversation;
 
 public class ConversationsListActivity extends BaseActivity {
 
-    private AtlasConversationsRecyclerView mConversationsList;
+    private ConversationsRecyclerView mConversationsList;
 
     public ConversationsListActivity() {
         super(R.layout.activity_conversations_list, R.menu.menu_conversations_list, R.string.title_conversations_list, false);
@@ -34,7 +34,7 @@ public class ConversationsListActivity extends BaseActivity {
             return;
         }
 
-        mConversationsList = (AtlasConversationsRecyclerView) findViewById(R.id.conversations_list);
+        mConversationsList = (ConversationsRecyclerView) findViewById(R.id.conversations_list);
 
         // Atlas methods
         mConversationsList.init(getLayerClient(), getPicasso())

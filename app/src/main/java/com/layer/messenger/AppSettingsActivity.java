@@ -18,7 +18,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.layer.atlas.AtlasAvatar;
+import com.layer.atlas.Avatar;
 import com.layer.atlas.util.Util;
 import com.layer.messenger.util.ConversationSettingsTaskLoader;
 import com.layer.messenger.util.ConversationSettingsTaskLoader.Results;
@@ -39,7 +39,7 @@ import java.util.List;
 
 public class AppSettingsActivity extends BaseActivity implements LayerConnectionListener, LayerAuthenticationListener, LayerChangeEventListener, View.OnLongClickListener, AdapterView.OnItemSelectedListener,  LoaderManager.LoaderCallbacks<Results> {
     /* Account */
-    private AtlasAvatar mAvatar;
+    private Avatar mAvatar;
     private TextView mUserName;
     private TextView mUserState;
     private Button mLogoutButton;
@@ -76,7 +76,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         super.onCreate(savedInstanceState);
 
         // View cache
-        mAvatar = (AtlasAvatar) findViewById(R.id.avatar);
+        mAvatar = (Avatar) findViewById(R.id.avatar);
         mUserName = (TextView) findViewById(R.id.user_name);
         mUserState = (TextView) findViewById(R.id.user_state);
         mLogoutButton = (Button) findViewById(R.id.logout_button);

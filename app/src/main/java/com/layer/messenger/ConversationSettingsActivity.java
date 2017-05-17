@@ -21,7 +21,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.layer.atlas.AtlasAvatar;
+import com.layer.atlas.Avatar;
 import com.layer.atlas.util.IdentityDisplayNameComparator;
 import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
@@ -267,7 +267,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
     }
 
     private static class ViewHolder extends RecyclerView.ViewHolder {
-        AtlasAvatar mAvatar;
+        Avatar mAvatar;
         TextView mTitle;
         ImageView mBlocked;
         Identity mParticipant;
@@ -275,7 +275,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
 
         public ViewHolder(ViewGroup parent) {
             super(LayoutInflater.from(parent.getContext()).inflate(R.layout.participant_item, parent, false));
-            mAvatar = (AtlasAvatar) itemView.findViewById(R.id.avatar);
+            mAvatar = (Avatar) itemView.findViewById(R.id.avatar);
             mTitle = (TextView) itemView.findViewById(R.id.title);
             mBlocked = (ImageView) itemView.findViewById(R.id.blocked);
         }

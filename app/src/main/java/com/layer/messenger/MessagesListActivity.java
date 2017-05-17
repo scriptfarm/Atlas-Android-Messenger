@@ -13,10 +13,10 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
 
-import com.layer.atlas.AtlasAddressBar;
-import com.layer.atlas.AtlasHistoricMessagesFetchLayout;
-import com.layer.atlas.AtlasMessageComposer;
-import com.layer.atlas.AtlasMessagesRecyclerView;
+import com.layer.atlas.AddressBar;
+import com.layer.atlas.HistoricMessagesFetchLayout;
+import com.layer.atlas.MessageComposer;
+import com.layer.atlas.MessagesRecyclerView;
 import com.layer.atlas.AtlasTypingIndicator;
 import com.layer.atlas.messagetypes.generic.GenericCellFactory;
 import com.layer.atlas.messagetypes.location.LocationCellFactory;
@@ -48,11 +48,11 @@ public class MessagesListActivity extends BaseActivity {
     private UiState mState;
     private Conversation mConversation;
 
-    private AtlasAddressBar mAddressBar;
-    private AtlasHistoricMessagesFetchLayout mHistoricFetchLayout;
-    private AtlasMessagesRecyclerView mMessagesList;
+    private AddressBar mAddressBar;
+    private HistoricMessagesFetchLayout mHistoricFetchLayout;
+    private MessagesRecyclerView mMessagesList;
     private AtlasTypingIndicator mTypingIndicator;
-    private AtlasMessageComposer mMessageComposer;
+    private MessageComposer mMessageComposer;
     private IdentityChangeListener mIdentityChangeListener;
 
     public MessagesListActivity() {
@@ -101,18 +101,18 @@ public class MessagesListActivity extends BaseActivity {
             return;
         }
 
-        mAddressBar = ((AtlasAddressBar) findViewById(R.id.conversation_launcher))
+        mAddressBar = ((AddressBar) findViewById(R.id.conversation_launcher))
                 .init(getLayerClient(), getPicasso())
-                .setOnConversationClickListener(new AtlasAddressBar.OnConversationClickListener() {
+                .setOnConversationClickListener(new AddressBar.OnConversationClickListener() {
                     @Override
-                    public void onConversationClick(AtlasAddressBar addressBar, Conversation conversation) {
+                    public void onConversationClick(AddressBar addressBar, Conversation conversation) {
                         setConversation(conversation, true);
                         setTitle(true);
                     }
                 })
-                .setOnParticipantSelectionChangeListener(new AtlasAddressBar.OnParticipantSelectionChangeListener() {
+                .setOnParticipantSelectionChangeListener(new AddressBar.OnParticipantSelectionChangeListener() {
                     @Override
-                    public void onParticipantSelectionChanged(AtlasAddressBar addressBar, final List<Identity> participants) {
+                    public void onParticipantSelectionChanged(AddressBar addressBar, final List<Identity> participants) {
                         if (participants.isEmpty()) {
                             setConversation(null, false);
                             return;
@@ -154,11 +154,11 @@ public class MessagesListActivity extends BaseActivity {
                     }
                 });
 
-        mHistoricFetchLayout = ((AtlasHistoricMessagesFetchLayout) findViewById(R.id.historic_sync_layout))
+        mHistoricFetchLayout = ((HistoricMessagesFetchLayout) findViewById(R.id.historic_sync_layout))
                 .init(getLayerClient())
                 .setHistoricMessagesPerFetch(20);
 
-        mMessagesList = ((AtlasMessagesRecyclerView) findViewById(R.id.messages_list))
+        mMessagesList = ((MessagesRecyclerView) findViewById(R.id.messages_list))
                 .init(getLayerClient(), getPicasso())
                 .addCellFactories(
                         new TextCellFactory(),
@@ -209,7 +209,7 @@ public class MessagesListActivity extends BaseActivity {
                     }
                 });
 
-        mMessageComposer = ((AtlasMessageComposer) findViewById(R.id.message_composer))
+        mMessageComposer = ((MessageComposer) findViewById(R.id.message_composer))
                 .init(getLayerClient())
                 .setTextSender(new TextSender())
                 .addAttachmentSenders(
