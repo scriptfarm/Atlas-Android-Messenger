@@ -8,7 +8,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.layer.atlas.AtlasConversationsRecyclerView;
-import com.layer.atlas.adapters.AtlasConversationsAdapter;
+import com.layer.atlas.adapters.ConversationsAdapter;
 import com.layer.atlas.messagetypes.location.LocationCellFactory;
 import com.layer.atlas.messagetypes.singlepartimage.SinglePartImageCellFactory;
 import com.layer.atlas.messagetypes.text.TextCellFactory;
@@ -39,9 +39,9 @@ public class ConversationsListActivity extends BaseActivity {
         // Atlas methods
         mConversationsList.init(getLayerClient(), getPicasso())
                 .setInitialHistoricMessagesToFetch(20)
-                .setOnConversationClickListener(new AtlasConversationsAdapter.OnConversationClickListener() {
+                .setOnConversationClickListener(new ConversationsAdapter.OnConversationClickListener() {
                     @Override
-                    public void onConversationClick(AtlasConversationsAdapter adapter, Conversation conversation) {
+                    public void onConversationClick(ConversationsAdapter adapter, Conversation conversation) {
                         Intent intent = new Intent(ConversationsListActivity.this, MessagesListActivity.class);
                         if (Log.isLoggable(Log.VERBOSE)) {
                             Log.v("Launching MessagesListActivity with existing conversation ID: " + conversation.getId());
@@ -51,7 +51,7 @@ public class ConversationsListActivity extends BaseActivity {
                     }
 
                     @Override
-                    public boolean onConversationLongClick(AtlasConversationsAdapter adapter, Conversation conversation) {
+                    public boolean onConversationLongClick(ConversationsAdapter adapter, Conversation conversation) {
                         return false;
                     }
                 })
