@@ -17,7 +17,7 @@ import com.layer.atlas.AddressBar;
 import com.layer.atlas.HistoricMessagesFetchLayout;
 import com.layer.atlas.MessageComposer;
 import com.layer.atlas.MessagesRecyclerView;
-import com.layer.atlas.AtlasTypingIndicator;
+import com.layer.atlas.TypingIndicatorLayout;
 import com.layer.atlas.messagetypes.generic.GenericCellFactory;
 import com.layer.atlas.messagetypes.location.LocationCellFactory;
 import com.layer.atlas.messagetypes.location.LocationSender;
@@ -51,7 +51,7 @@ public class MessagesListActivity extends BaseActivity {
     private AddressBar mAddressBar;
     private HistoricMessagesFetchLayout mHistoricFetchLayout;
     private MessagesRecyclerView mMessagesList;
-    private AtlasTypingIndicator mTypingIndicator;
+    private TypingIndicatorLayout mTypingIndicator;
     private MessageComposer mMessageComposer;
     private IdentityChangeListener mIdentityChangeListener;
 
@@ -199,12 +199,12 @@ public class MessagesListActivity extends BaseActivity {
                     }
                 });
 
-        mTypingIndicator = new AtlasTypingIndicator(this)
+        mTypingIndicator = new TypingIndicatorLayout(this)
                 .init(getLayerClient())
                 .setTypingIndicatorFactory(new BubbleTypingIndicatorFactory())
-                .setTypingActivityListener(new AtlasTypingIndicator.TypingActivityListener() {
+                .setTypingActivityListener(new TypingIndicatorLayout.TypingActivityListener() {
                     @Override
-                    public void onTypingActivityChange(AtlasTypingIndicator typingIndicator, boolean active) {
+                    public void onTypingActivityChange(TypingIndicatorLayout typingIndicator, boolean active) {
                         mMessagesList.setFooterView(active ? typingIndicator : null);
                     }
                 });
