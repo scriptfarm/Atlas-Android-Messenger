@@ -18,8 +18,8 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.layer.atlas.Avatar;
-import com.layer.atlas.util.Util;
+import com.layer.ui.Avatar;
+import com.layer.ui.util.Util;
 import com.layer.messenger.util.ConversationSettingsTaskLoader;
 import com.layer.messenger.util.ConversationSettingsTaskLoader.Results;
 
@@ -200,7 +200,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 LayerClient.setLoggingEnabled(AppSettingsActivity.this, isChecked);
-                com.layer.atlas.util.Log.setLoggingEnabled(isChecked);
+                com.layer.ui.util.Log.setLoggingEnabled(isChecked);
                 Log.setAlwaysLoggable(isChecked);
             }
         });

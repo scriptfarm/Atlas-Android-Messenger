@@ -7,7 +7,7 @@
     android:background="@drawable/atlas_address_bar_item_background"
     android:orientation="horizontal">
 
-    <com.layer.atlas.Avatar
+    <com.layer.ui.Avatar
         android:id="@+id/avatar"
         android:layout_width="@dimen/atlas_avatar_item_single"
         android:layout_height="@dimen/atlas_avatar_item_single"
