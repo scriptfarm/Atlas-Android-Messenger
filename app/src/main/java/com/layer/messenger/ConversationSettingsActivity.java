@@ -181,7 +181,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
             Collections.sort(mParticipants, new IdentityDisplayNameComparator());
 
             // Adjust participant container height
-            int height = Math.round(mParticipants.size() * getResources().getDimensionPixelSize(com.layer.atlas.R.dimen.atlas_secondary_item_height));
+            int height = Math.round(mParticipants.size() * getResources().getDimensionPixelSize(com.layer.ui.R.dimen.atlas_secondary_item_height));
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height);
             mParticipantRecyclerView.setLayoutParams(params);
 
