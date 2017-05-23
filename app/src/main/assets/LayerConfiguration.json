@@ -12,7 +12,7 @@
       "cert": "https://certs.lyr8.net/certificates",
       "auth": "https://sync.lyr8.net",
       "sync": "https://sync.lyr8.net/",
-      "telemetry" : "https://staging-telemetry.layer.com/"
+      "telemetry" : "https://telemetry.layer.com/"
     }
   },
   {
