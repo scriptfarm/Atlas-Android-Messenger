@@ -3,6 +3,7 @@ package com.layer.messenger;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -49,6 +50,9 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
     /* Notifications */
     private Switch mShowNotifications;
 
+    /* Telemetry */
+    private Switch mTelemetry;
+
     /* Debug */
     private Switch mVerboseLogging;
     private TextView mAppVersion;
@@ -82,6 +86,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         mLogoutButton = (Button) findViewById(R.id.logout_button);
         mPresenceSpinner = (Spinner) findViewById(R.id.presence_spinner);
         mShowNotifications = (Switch) findViewById(R.id.show_notifications_switch);
+        mTelemetry = (Switch) findViewById(R.id.telemetry_switch);
         mVerboseLogging = (Switch) findViewById(R.id.logging_switch);
         mAppVersion = (TextView) findViewById(R.id.app_version);
         mAtlasVersion = (TextView) findViewById(R.id.atlas_version);
@@ -196,6 +201,14 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
             }
         });
 
+        mTelemetry.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences(App.SHARED_PREFS, MODE_PRIVATE);
+                sharedPreferences.edit().putBoolean(App.SHARED_PREFS_KEY_TELEMETRY_ENABLED, isChecked).apply();
+            }
+        });
+
         mVerboseLogging.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -269,6 +282,10 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
 
         /* Notifications */
         mShowNotifications.setChecked(PushNotificationReceiver.getNotifications(this).isEnabled());
+
+        /* Telemetry */
+        mTelemetry.setChecked(getApplicationContext().getSharedPreferences(App.SHARED_PREFS, MODE_PRIVATE)
+                .getBoolean(App.SHARED_PREFS_KEY_TELEMETRY_ENABLED, false));
 
         /* Debug */
         // enable logging through adb: `adb shell setprop log.tag.LayerSDK VERBOSE`

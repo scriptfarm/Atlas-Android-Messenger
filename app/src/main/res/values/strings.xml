@@ -58,6 +58,8 @@
     <string name="settings_button_log_out">Log Out</string>
     <string name="settings_title_notifications">Notifications</string>
     <string name="settings_switch_show_notifications">Show Notifications</string>
+    <string name="settings_title_telemetry">Telemetry</string>
+    <string name="settings_switch_telemetry">Enable Telemetry</string>
     <string name="settings_title_debug">Debug</string>
     <string name="settings_switch_verbose_logging">Verbose Logging</string>
     <string name="settings_title_app_version">App Version</string>
