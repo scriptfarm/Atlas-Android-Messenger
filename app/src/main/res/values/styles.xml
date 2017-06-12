@@ -3,13 +3,13 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.Atlas.Light">
-        <!-- Apply default Atlas styles -->
-        <item name="AtlasConversationsRecyclerView">@style/AtlasConversationsRecyclerView</item>
-        <item name="AtlasMessagesRecyclerView">@style/AtlasMessagesRecyclerView</item>
-        <item name="AtlasMessageComposer">@style/AtlasMessageComposer</item>
-        <item name="AtlasAddressBar">@style/AtlasAddressBar</item>
-        <item name="AtlasTypingIndicator">@style/AtlasTypingIndicator</item>
+    <style name="AppTheme" parent="Theme.ui.Light">
+        <!-- Apply default styles -->
+        <item name="ConversationsRecyclerView">@style/ConversationsRecyclerView</item>
+        <item name="MessagesRecyclerView">@style/MessagesRecyclerView</item>
+        <item name="MessageComposer">@style/MessageComposer</item>
+        <item name="AddressBar">@style/AddressBar</item>
+        <item name="TypingIndicator">@style/TypingIndicator</item>
     </style>
 
 </resources>

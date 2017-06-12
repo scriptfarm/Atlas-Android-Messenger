@@ -298,7 +298,7 @@ public class PushNotificationReceiver extends BroadcastReceiver {
                     .setContentTitle(conversationTitle)
                     .setContentText(collapsedSummary)
                     .setAutoCancel(true)
-                    .setLights(context.getResources().getColor(R.color.atlas_action_bar_background), 100, 1900)
+                    .setLights(context.getResources().getColor(R.color.layer_ui_action_bar_background), 100, 1900)
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setDefaults(NotificationCompat.DEFAULT_SOUND | NotificationCompat.DEFAULT_VIBRATE)
                     .setStyle(inboxStyle);
@@ -321,7 +321,7 @@ public class PushNotificationReceiver extends BroadcastReceiver {
                     .setContentTitle(context.getString(R.string.push_notification_no_content_title))
                     .setContentText(text)
                     .setAutoCancel(true)
-                    .setLights(context.getResources().getColor(R.color.atlas_action_bar_background), 100, 1900)
+                    .setLights(context.getResources().getColor(R.color.layer_ui_action_bar_background), 100, 1900)
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setDefaults(NotificationCompat.DEFAULT_SOUND | NotificationCompat.DEFAULT_VIBRATE);
 

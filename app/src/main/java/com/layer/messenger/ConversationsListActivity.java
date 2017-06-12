@@ -7,20 +7,20 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.layer.atlas.AtlasConversationsRecyclerView;
-import com.layer.atlas.adapters.AtlasConversationsAdapter;
-import com.layer.atlas.messagetypes.location.LocationCellFactory;
-import com.layer.atlas.messagetypes.singlepartimage.SinglePartImageCellFactory;
-import com.layer.atlas.messagetypes.text.TextCellFactory;
-import com.layer.atlas.messagetypes.threepartimage.ThreePartImageCellFactory;
-import com.layer.atlas.util.views.SwipeableItem;
+import com.layer.ui.ConversationsRecyclerView;
+import com.layer.ui.adapters.ConversationsAdapter;
+import com.layer.ui.messagetypes.location.LocationCellFactory;
+import com.layer.ui.messagetypes.singlepartimage.SinglePartImageCellFactory;
+import com.layer.ui.messagetypes.text.TextCellFactory;
+import com.layer.ui.messagetypes.threepartimage.ThreePartImageCellFactory;
+import com.layer.ui.util.views.SwipeableItem;
 import com.layer.messenger.util.Log;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.messaging.Conversation;
 
 public class ConversationsListActivity extends BaseActivity {
 
-    private AtlasConversationsRecyclerView mConversationsList;
+    private ConversationsRecyclerView mConversationsList;
 
     public ConversationsListActivity() {
         super(R.layout.activity_conversations_list, R.menu.menu_conversations_list, R.string.title_conversations_list, false);
@@ -34,14 +34,14 @@ public class ConversationsListActivity extends BaseActivity {
             return;
         }
 
-        mConversationsList = (AtlasConversationsRecyclerView) findViewById(R.id.conversations_list);
+        mConversationsList = (ConversationsRecyclerView) findViewById(R.id.conversations_list);
 
         // Atlas methods
         mConversationsList.init(getLayerClient(), getPicasso())
                 .setInitialHistoricMessagesToFetch(20)
-                .setOnConversationClickListener(new AtlasConversationsAdapter.OnConversationClickListener() {
+                .setOnConversationClickListener(new ConversationsAdapter.OnConversationClickListener() {
                     @Override
-                    public void onConversationClick(AtlasConversationsAdapter adapter, Conversation conversation) {
+                    public void onConversationClick(ConversationsAdapter adapter, Conversation conversation) {
                         Intent intent = new Intent(ConversationsListActivity.this, MessagesListActivity.class);
                         if (Log.isLoggable(Log.VERBOSE)) {
                             Log.v("Launching MessagesListActivity with existing conversation ID: " + conversation.getId());
@@ -51,7 +51,7 @@ public class ConversationsListActivity extends BaseActivity {
                     }
 
                     @Override
-                    public boolean onConversationLongClick(AtlasConversationsAdapter adapter, Conversation conversation) {
+                    public boolean onConversationLongClick(ConversationsAdapter adapter, Conversation conversation) {
                         return false;
                     }
                 })

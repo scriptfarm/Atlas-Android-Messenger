@@ -6,10 +6,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.StrictMode;
 
-import com.layer.atlas.messagetypes.text.TextCellFactory;
-import com.layer.atlas.messagetypes.threepartimage.ThreePartImageUtils;
-import com.layer.atlas.util.Util;
-import com.layer.atlas.util.picasso.requesthandlers.MessagePartRequestHandler;
+import com.layer.ui.messagetypes.text.TextCellFactory;
+import com.layer.ui.messagetypes.threepartimage.ThreePartImageUtils;
+import com.layer.ui.util.Util;
+import com.layer.ui.util.picasso.requesthandlers.MessagePartRequestHandler;
 import com.layer.messenger.util.LayerAuthenticationProvider;
 import com.layer.messenger.util.CustomEndpoint;
 import com.layer.messenger.util.AuthenticationProvider;
@@ -49,7 +49,7 @@ public class App extends Application {
 
         // Enable verbose logging in debug builds
         if (BuildConfig.DEBUG) {
-            com.layer.atlas.util.Log.setLoggingEnabled(true);
+            com.layer.ui.util.Log.setLoggingEnabled(true);
             com.layer.messenger.util.Log.setAlwaysLoggable(true);
             LayerClient.setLoggingEnabled(this, true);
             LayerClient.setPrivateLoggingEnabled(true);

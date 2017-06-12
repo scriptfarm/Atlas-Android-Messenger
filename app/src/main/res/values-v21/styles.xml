@@ -3,7 +3,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.Atlas.Light">
+    <style name="AppTheme" parent="Theme.ui.Light">
     </style>
 
 </resources>

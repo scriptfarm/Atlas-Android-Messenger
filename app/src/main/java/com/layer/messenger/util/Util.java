@@ -1,6 +1,6 @@
 package com.layer.messenger.util;
 
-import com.layer.atlas.util.ConversationFormatter;
+import com.layer.ui.util.ConversationFormatter;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.messaging.Conversation;
 
