@@ -173,6 +173,7 @@ public class CustomEndpoint {
         final String mEndpointCert;
         final String mEndpointAuth;
         final String mEndpointSync;
+        final String mEndpointTelemetry;
 
         public Endpoint(JSONObject o) throws JSONException {
             mName = o.getString("name");
@@ -194,17 +195,19 @@ public class CustomEndpoint {
                 mEndpointCert = endpoint.getString("cert");
                 mEndpointAuth = endpoint.getString("auth");
                 mEndpointSync = endpoint.getString("sync");
+                mEndpointTelemetry = endpoint.has("telemetry") ? endpoint.getString("telemetry") : null;
             } else {
                 mEndpointConf = null;
                 mEndpointCert = null;
                 mEndpointAuth = null;
                 mEndpointSync = null;
+                mEndpointTelemetry = null;
             }
         }
 
         public void setLayerClientOptions(LayerClient.Options options) {
             if (mEndpointAuth != null) {
-                options.customEndpoint(mEndpointConf, mEndpointCert, mEndpointAuth, mEndpointSync);
+                options.customEndpoint(mEndpointConf, mEndpointCert, mEndpointAuth, mEndpointSync, mEndpointTelemetry);
             }
         }
 
@@ -232,6 +235,7 @@ public class CustomEndpoint {
                     ", mEndpointCert='" + mEndpointCert + '\'' +
                     ", mEndpointAuth='" + mEndpointAuth + '\'' +
                     ", mEndpointSync='" + mEndpointSync + '\'' +
+                    ", mEndpointTelemetry= '" + mEndpointTelemetry + '\'' +
                     '}';
         }
     }

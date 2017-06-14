@@ -8,6 +8,12 @@ buildscript {
     }
 }
 
+// Setting version to be used for TestButler, which is there to help the emulator on
+// CI system not cause random failures
+ext {
+    testButler = '1.3.1'
+}
+
 allprojects {
     repositories {
         maven { url "https://raw.githubusercontent.com/layerhq/releases-android/master/releases/" }
@@ -17,4 +23,26 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+// Disable preDexing for builds on CI systems, since the repo is freshly cloned and will be gone
+// again after the tests are done. Speeds up builds on CI.
+project.ext {
+    if (project.hasProperty('preDexEnabled')) {
+        project.ext.preDexLibs = project.properties['preDexEnabled'].equals('true')
+    } else {
+        project.ext.preDexLibs = true // pre dexing should be true by default
+    }
+
+    println('PREDEX ' + (project.ext.preDexLibs ? 'ENABLED' : 'DISABLED')) // goes to build log or console output
+}
+
+subprojects {
+    project.plugins.whenPluginAdded { plugin ->
+        if ("com.android.build.gradle.AppPlugin".equals(plugin.class.name)) {
+            project.android.dexOptions.preDexLibraries = rootProject.ext.preDexLibs
+        } else if ("com.android.build.gradle.LibraryPlugin".equals(plugin.class.name)) {
+            project.android.dexOptions.preDexLibraries = rootProject.ext.preDexLibs
+        }
+    }
 }
