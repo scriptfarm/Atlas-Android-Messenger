@@ -102,7 +102,7 @@ public class MessagesListActivity extends BaseActivity {
         }
 
         mAddressBar = ((AddressBar) findViewById(R.id.conversation_launcher))
-                .init(getLayerClient(), getPicasso())
+                .init(getLayerClient(), Config.getImageCacheWrapper(this))
                 .setOnConversationClickListener(new AddressBar.OnConversationClickListener() {
                     @Override
                     public void onConversationClick(AddressBar addressBar, Conversation conversation) {
@@ -159,7 +159,7 @@ public class MessagesListActivity extends BaseActivity {
                 .setHistoricMessagesPerFetch(20);
 
         mMessagesList = ((MessagesRecyclerView) findViewById(R.id.messages_list))
-                .init(getLayerClient(), getPicasso())
+                .init(getLayerClient(), Config.getImageCacheWrapper(this))
                 .addCellFactories(
                         new TextCellFactory(),
                         new ThreePartImageCellFactory(this, getLayerClient(), getPicasso()),

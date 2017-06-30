@@ -37,7 +37,7 @@ public class ConversationsListActivity extends BaseActivity {
         mConversationsList = (ConversationsRecyclerView) findViewById(R.id.conversations_list);
 
         // Atlas methods
-        mConversationsList.init(getLayerClient(), getPicasso())
+        mConversationsList.init(getLayerClient(), getPicasso(), Config.getImageCacheWrapper(this))
                 .setInitialHistoricMessagesToFetch(20)
                 .setOnConversationClickListener(new ConversationsAdapter.OnConversationClickListener() {
                     @Override

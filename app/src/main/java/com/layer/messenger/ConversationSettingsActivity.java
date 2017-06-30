@@ -21,7 +21,8 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.layer.ui.Avatar;
+import com.layer.ui.avatar.AvatarView;
+import com.layer.ui.avatar.AvatarViewModel;
 import com.layer.ui.util.IdentityDisplayNameComparator;
 import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
@@ -31,6 +32,7 @@ import com.layer.sdk.listeners.LayerPolicyListener;
 import com.layer.sdk.messaging.Conversation;
 import com.layer.sdk.messaging.Identity;
 import com.layer.sdk.policy.Policy;
+import com.layer.ui.util.imagecache.requesthandlers.MessagePartRequestHandler;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,6 +49,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
 
     private Conversation mConversation;
     private ParticipantAdapter mParticipantAdapter;
+    private MessagePartRequestHandler messagePartRequestHandler;
 
     public ConversationSettingsActivity() {
         super(R.layout.activity_conversation_settings, R.menu.menu_conversation_details, R.string.title_conversation_details, true);
@@ -192,7 +195,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
         @Override
         public ViewHolder onCreateViewHolder(final ViewGroup parent, int viewType) {
             ViewHolder viewHolder = new ViewHolder(parent);
-            viewHolder.mAvatar.init(App.getPicasso());
+            viewHolder.mAvatarView.init(new AvatarViewModel(Config.getImageCacheWrapper(parent.getContext())));
             viewHolder.itemView.setTag(viewHolder);
 
             // Click to display remove / block dialog
@@ -245,7 +248,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
         public void onBindViewHolder(ViewHolder viewHolder, int position) {
             Identity participant = mParticipants.get(position);
             viewHolder.mTitle.setText(com.layer.ui.util.Util.getDisplayName(participant));
-            viewHolder.mAvatar.setParticipants(participant);
+            viewHolder.mAvatarView.setParticipants(participant);
             viewHolder.mParticipant = participant;
 
             Policy block = null;
@@ -267,7 +270,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
     }
 
     private static class ViewHolder extends RecyclerView.ViewHolder {
-        Avatar mAvatar;
+        AvatarView mAvatarView;
         TextView mTitle;
         ImageView mBlocked;
         Identity mParticipant;
@@ -275,7 +278,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
 
         public ViewHolder(ViewGroup parent) {
             super(LayoutInflater.from(parent.getContext()).inflate(R.layout.participant_item, parent, false));
-            mAvatar = (Avatar) itemView.findViewById(R.id.avatar);
+            mAvatarView = (AvatarView) itemView.findViewById(R.id.avatar);
             mTitle = (TextView) itemView.findViewById(R.id.title);
             mBlocked = (ImageView) itemView.findViewById(R.id.blocked);
         }

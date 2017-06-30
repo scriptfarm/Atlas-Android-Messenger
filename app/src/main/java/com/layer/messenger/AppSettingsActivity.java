@@ -19,7 +19,8 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.layer.ui.Avatar;
+import com.layer.ui.avatar.AvatarView;
+import com.layer.ui.avatar.AvatarViewModel;
 import com.layer.ui.util.Util;
 import com.layer.messenger.util.ConversationSettingsTaskLoader;
 import com.layer.messenger.util.ConversationSettingsTaskLoader.Results;
@@ -40,7 +41,7 @@ import java.util.List;
 
 public class AppSettingsActivity extends BaseActivity implements LayerConnectionListener, LayerAuthenticationListener, LayerChangeEventListener, View.OnLongClickListener, AdapterView.OnItemSelectedListener,  LoaderManager.LoaderCallbacks<Results> {
     /* Account */
-    private Avatar mAvatar;
+    private AvatarView mAvatarView;
     private TextView mUserName;
     private TextView mUserState;
     private Button mLogoutButton;
@@ -80,7 +81,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         super.onCreate(savedInstanceState);
 
         // View cache
-        mAvatar = (Avatar) findViewById(R.id.avatar);
+        mAvatarView = (AvatarView) findViewById(R.id.avatar);
         mUserName = (TextView) findViewById(R.id.user_name);
         mUserState = (TextView) findViewById(R.id.user_state);
         mLogoutButton = (Button) findViewById(R.id.logout_button);
@@ -100,8 +101,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         mDiskAllowance = (TextView) findViewById(R.id.disk_allowance);
         mAutoDownloadMimeTypes = (TextView) findViewById(R.id.auto_download_mime_types);
 
-
-        mAvatar.init(getPicasso());
+        mAvatarView.init(new AvatarViewModel(Config.getImageCacheWrapper(this)));
 
         getSupportLoaderManager().initLoader(R.id.setting_loader_id, null, this);
 
@@ -267,7 +267,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
 
         /* Account */
         Identity currentUser = getLayerClient().getAuthenticatedUser();
-        mAvatar.setParticipants(currentUser);
+        mAvatarView.setParticipants(currentUser);
         if (currentUser != null) {
             mUserName.setText(Util.getDisplayName(currentUser));
         } else {
@@ -406,11 +406,10 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         }
 
         // Local changes don't raise change notifications. So, refresh manually
-        mAvatar.invalidate();
+        mAvatarView.invalidate();
     }
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
-
     }
 }
