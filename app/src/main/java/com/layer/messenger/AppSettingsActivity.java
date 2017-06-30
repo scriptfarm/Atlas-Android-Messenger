@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.layer.ui.avatar.AvatarView;
 import com.layer.ui.avatar.AvatarViewModel;
+import com.layer.ui.presence.PresenceView;
 import com.layer.ui.util.Util;
 import com.layer.messenger.util.ConversationSettingsTaskLoader;
 import com.layer.messenger.util.ConversationSettingsTaskLoader.Results;
@@ -71,6 +72,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
     private TextView mDiskUtilization;
     private TextView mDiskAllowance;
     private TextView mAutoDownloadMimeTypes;
+    private PresenceView mPresenceView;
 
     public AppSettingsActivity() {
         super(R.layout.activity_app_settings, R.menu.menu_settings, R.string.title_settings, true);
@@ -81,6 +83,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         super.onCreate(savedInstanceState);
 
         // View cache
+        mPresenceView = (PresenceView) findViewById(R.id.presence);
         mAvatarView = (AvatarView) findViewById(R.id.avatar);
         mUserName = (TextView) findViewById(R.id.user_name);
         mUserState = (TextView) findViewById(R.id.user_state);
@@ -102,6 +105,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         mAutoDownloadMimeTypes = (TextView) findViewById(R.id.auto_download_mime_types);
 
         mAvatarView.init(new AvatarViewModel(Config.getImageCacheWrapper(this)));
+        mPresenceView.init(getLayerClient().getAuthenticatedUser());
 
         getSupportLoaderManager().initLoader(R.id.setting_loader_id, null, this);
 
@@ -406,7 +410,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         }
 
         // Local changes don't raise change notifications. So, refresh manually
-        mAvatarView.invalidate();
+        mPresenceView.invalidate();
     }
 
     @Override
