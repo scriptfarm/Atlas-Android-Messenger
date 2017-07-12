@@ -278,7 +278,7 @@ public class MessagesListActivity extends BaseActivity {
         if (!useConversation) {
             setTitle(R.string.title_select_conversation);
         } else {
-            setTitle(Util.getConversationTitle(getLayerClient(), mConversation));
+            setTitle(Util.getConversationItemFormatter().getConversationTitle(getLayerClient().getAuthenticatedUser(), mConversation));
         }
     }
 

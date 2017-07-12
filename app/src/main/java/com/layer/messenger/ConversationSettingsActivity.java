@@ -77,7 +77,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE || (event != null && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
                     String title = ((EditText) v).getText().toString().trim();
-                    Util.setConversationMetadataTitle(mConversation, title);
+                    Util.getConversationItemFormatter().setMetaDataTitleOnConversation(mConversation, title);
                     Toast.makeText(v.getContext(), R.string.toast_group_name_updated, Toast.LENGTH_SHORT).show();
                     return true;
                 }
@@ -123,7 +123,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
     private void refresh() {
         if (!getLayerClient().isAuthenticated()) return;
 
-        mConversationName.setText(Util.getConversationMetadataTitle(mConversation));
+        mConversationName.setText(Util.getConversationItemFormatter().getConversationMetadataTitle(mConversation));
         mShowNotifications.setChecked(PushNotificationReceiver.getNotifications(this).isEnabled(mConversation.getId()));
 
         Set<Identity> participantsMinusMe = new HashSet<>(mConversation.getParticipants());

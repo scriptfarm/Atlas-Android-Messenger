@@ -7,16 +7,13 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.layer.ui.ConversationsRecyclerView;
-import com.layer.ui.adapters.ConversationsAdapter;
-import com.layer.ui.messagetypes.location.LocationCellFactory;
-import com.layer.ui.messagetypes.singlepartimage.SinglePartImageCellFactory;
-import com.layer.ui.messagetypes.text.TextCellFactory;
-import com.layer.ui.messagetypes.threepartimage.ThreePartImageCellFactory;
-import com.layer.ui.util.views.SwipeableItem;
 import com.layer.messenger.util.Log;
+import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.messaging.Conversation;
+import com.layer.ui.ConversationsRecyclerView;
+import com.layer.ui.conversationitem.OnConversationItemClickListener;
+import com.layer.ui.util.views.SwipeableItem;
 
 public class ConversationsListActivity extends BaseActivity {
 
@@ -37,11 +34,11 @@ public class ConversationsListActivity extends BaseActivity {
         mConversationsList = (ConversationsRecyclerView) findViewById(R.id.conversations_list);
 
         // Atlas methods
-        mConversationsList.init(getLayerClient(), getPicasso())
+        mConversationsList.init(getLayerClient(), getPicasso(), Util.getConversationItemFormatter())
                 .setInitialHistoricMessagesToFetch(20)
-                .setOnConversationClickListener(new ConversationsAdapter.OnConversationClickListener() {
+                .setOnConversationClickListener(new OnConversationItemClickListener() {
                     @Override
-                    public void onConversationClick(ConversationsAdapter adapter, Conversation conversation) {
+                    public void onConversationClick(Conversation conversation) {
                         Intent intent = new Intent(ConversationsListActivity.this, MessagesListActivity.class);
                         if (Log.isLoggable(Log.VERBOSE)) {
                             Log.v("Launching MessagesListActivity with existing conversation ID: " + conversation.getId());
@@ -51,14 +48,11 @@ public class ConversationsListActivity extends BaseActivity {
                     }
 
                     @Override
-                    public boolean onConversationLongClick(ConversationsAdapter adapter, Conversation conversation) {
+                    public boolean onConversationLongClick(Conversation conversation) {
                         return false;
                     }
                 })
-                .addCellFactories(new TextCellFactory(),
-                        new ThreePartImageCellFactory(getLayerClient(), getPicasso()),
-                        new SinglePartImageCellFactory(getLayerClient(), getPicasso()),
-                        new LocationCellFactory(getPicasso()))
+                .addCellFactories(Util.getCellFactories(getLayerClient(), getPicasso()))
                 .setOnConversationSwipeListener(new SwipeableItem.OnSwipeListener<Conversation>() {
                     @Override
                     public void onSwipe(final Conversation conversation, int direction) {

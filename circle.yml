@@ -30,7 +30,7 @@ dependencies:
 test:
   override:
     # Start the emulator. We're running UI tests, and thus need a window. Do not use the -no-window option
-    - emulator -avd layer-android19 -gpu off:
+    - emulator -avd layer-android19 -gpu mesa:
         background: true
         parallel: true
     # Wait for it to have booted
