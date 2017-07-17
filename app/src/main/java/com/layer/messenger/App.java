@@ -14,7 +14,7 @@ import com.layer.sdk.LayerClient;
 import com.layer.ui.messagetypes.text.TextCellFactory;
 import com.layer.ui.messagetypes.threepartimage.ThreePartImageUtils;
 import com.layer.ui.util.Util;
-import com.layer.ui.util.picasso.requesthandlers.MessagePartRequestHandler;
+import com.layer.ui.util.imagecache.requesthandlers.MessagePartRequestHandler;
 import com.squareup.picasso.Picasso;
 
 import java.util.Arrays;
@@ -145,8 +145,7 @@ public class App extends Application {
     /**
      * Gets or creates a LayerClient, using a default set of LayerClient.Options
      * App ID and Options from the `generateLayerClient` method.  Returns `null` if the App was
-     * unable to create a LayerClient (due to no App ID, etc.). Set App Id {@link App.LAYER_APP_ID}
-     *
+     * unable to create a LayerClient (due to no App ID, etc.). Set the information in assets/LayerConfiguration.json
      * @return New or existing LayerClient, or `null` if a LayerClient could not be constructed.
      */
     public static LayerClient getLayerClient() {
@@ -165,7 +164,7 @@ public class App extends Application {
 
                     /* Fetch the minimum amount per conversation when first authenticated */
                     .historicSyncPolicy(LayerClient.Options.HistoricSyncPolicy.FROM_LAST_MESSAGE)
-                    
+
                     /* Automatically download text and ThreePartImage info/preview */
                     .autoDownloadMimeTypes(Arrays.asList(
                             TextCellFactory.MIME_TYPE,
