@@ -28,11 +28,24 @@
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp">
 
-            <com.layer.ui.avatar.AvatarView
-                android:id="@+id/avatar"
-                android:layout_width="@dimen/layer_ui_avatar_width"
-                android:layout_height="@dimen/layer_ui_avatar_height"
-                android:layout_gravity="center_vertical" />
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical">
+
+                <com.layer.ui.avatar.AvatarView
+                    android:id="@+id/avatar"
+                    android:layout_width="@dimen/layer_ui_avatar_width"
+                    android:layout_height="@dimen/layer_ui_avatar_height"
+                    android:layout_gravity="center_vertical" />
+
+                <com.layer.ui.presence.PresenceView
+                    android:layout_width="@dimen/layer_ui_avatar_presence_diameter"
+                    android:layout_height="@dimen/layer_ui_avatar_presence_diameter"
+                    android:layout_gravity="bottom|right"
+                    android:id="@+id/presence" />
+
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"

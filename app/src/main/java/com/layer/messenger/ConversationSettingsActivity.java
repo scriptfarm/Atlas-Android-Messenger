@@ -24,6 +24,7 @@ import android.widget.Toast;
 import com.layer.ui.avatar.AvatarView;
 import com.layer.ui.avatar.AvatarViewModelImpl;
 import com.layer.ui.avatar.IdentityNameFormatterImpl;
+import com.layer.ui.presence.PresenceView;
 import com.layer.ui.util.IdentityDisplayNameComparator;
 import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
@@ -250,6 +251,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
             Identity participant = mParticipants.get(position);
             viewHolder.mTitle.setText(com.layer.ui.util.Util.getDisplayName(participant));
             viewHolder.mAvatarView.setParticipants(participant);
+            viewHolder.mPresenceView.setParticipants(participant);
             viewHolder.mParticipant = participant;
 
             Policy block = null;
@@ -272,6 +274,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
 
     private static class ViewHolder extends RecyclerView.ViewHolder {
         AvatarView mAvatarView;
+        PresenceView mPresenceView;
         TextView mTitle;
         ImageView mBlocked;
         Identity mParticipant;
@@ -280,6 +283,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
         public ViewHolder(ViewGroup parent) {
             super(LayoutInflater.from(parent.getContext()).inflate(R.layout.participant_item, parent, false));
             mAvatarView = (AvatarView) itemView.findViewById(R.id.avatar);
+            mPresenceView = (PresenceView) itemView.findViewById(R.id.presence);
             mTitle = (TextView) itemView.findViewById(R.id.title);
             mBlocked = (ImageView) itemView.findViewById(R.id.blocked);
         }

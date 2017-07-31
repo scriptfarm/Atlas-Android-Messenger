@@ -22,6 +22,7 @@ import android.widget.Toast;
 import com.layer.ui.avatar.AvatarView;
 import com.layer.ui.avatar.AvatarViewModelImpl;
 import com.layer.ui.avatar.IdentityNameFormatterImpl;
+import com.layer.ui.presence.PresenceView;
 import com.layer.ui.util.Util;
 import com.layer.messenger.util.ConversationSettingsTaskLoader;
 import com.layer.messenger.util.ConversationSettingsTaskLoader.Results;
@@ -72,6 +73,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
     private TextView mDiskUtilization;
     private TextView mDiskAllowance;
     private TextView mAutoDownloadMimeTypes;
+    private PresenceView mPresenceView;
 
     public AppSettingsActivity() {
         super(R.layout.activity_app_settings, R.menu.menu_settings, R.string.title_settings, true);
@@ -83,6 +85,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
 
         // View cache
         mAvatarView = (AvatarView) findViewById(R.id.avatar);
+        mPresenceView = (PresenceView) findViewById(R.id.presence);
         mUserName = (TextView) findViewById(R.id.user_name);
         mUserState = (TextView) findViewById(R.id.user_state);
         mLogoutButton = (Button) findViewById(R.id.logout_button);
@@ -269,6 +272,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         /* Account */
         Identity currentUser = getLayerClient().getAuthenticatedUser();
         mAvatarView.setParticipants(currentUser);
+        mPresenceView.setParticipants(currentUser);
         if (currentUser != null) {
             mUserName.setText(Util.getDisplayName(currentUser));
         } else {
@@ -407,7 +411,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         }
 
         // Local changes don't raise change notifications. So, refresh manually
-        mAvatarView.invalidate();
+        mPresenceView.invalidate();
     }
 
     @Override
