@@ -10,6 +10,7 @@ import com.layer.ui.messagetypes.location.LocationCellFactory;
 import com.layer.ui.messagetypes.singlepartimage.SinglePartImageCellFactory;
 import com.layer.ui.messagetypes.text.TextCellFactory;
 import com.layer.ui.messagetypes.threepartimage.ThreePartImageCellFactory;
+import com.layer.ui.util.LayerDateFormatter;
 import com.layer.ui.util.imagecache.ImageCacheWrapper;
 import com.layer.ui.util.imagecache.PicassoImageCacheWrapper;
 import com.squareup.picasso.Picasso;
@@ -26,6 +27,7 @@ public class Util {
     private static ConversationItemFormatter sConversationItemFormatter;
     private static Set<CellFactory> sCellFactories;
     private static ImageCacheWrapper sImageCacheWrapper;
+    private static LayerDateFormatter sLayerDateFormatter;
 
     public static void init(Context context) {
         DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
@@ -71,5 +73,12 @@ public class Util {
             sImageCacheWrapper = new PicassoImageCacheWrapper(App.getPicasso());
         }
         return sImageCacheWrapper;
+    }
+
+    public static LayerDateFormatter getLayerDateFormatter(Context context) {
+        if (sLayerDateFormatter == null) {
+            sLayerDateFormatter = new LayerDateFormatterImpl(context);
+        }
+        return sLayerDateFormatter;
     }
 }
