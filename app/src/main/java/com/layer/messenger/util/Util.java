@@ -29,10 +29,10 @@ public class Util {
     private static ImageCacheWrapper sImageCacheWrapper;
     private static LayerDateFormatter sLayerDateFormatter;
 
-    public static void init(Context context) {
+    public static void init(Context context, LayerClient layerClient, Picasso picasso) {
         DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
         DateFormat timeFormat = android.text.format.DateFormat.getTimeFormat(context);
-        sConversationItemFormatter = new ConversationItemFormatter(context, timeFormat, dateFormat, sCellFactories);
+        sConversationItemFormatter = new ConversationItemFormatter(context, timeFormat, dateFormat, getCellFactories(layerClient, picasso));
     }
 
     public static ConversationItemFormatter getConversationItemFormatter() {

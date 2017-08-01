@@ -28,6 +28,7 @@ import com.layer.ui.messagetypes.threepartimage.CameraSender;
 import com.layer.ui.messagetypes.threepartimage.GallerySender;
 import com.layer.ui.messagetypes.threepartimage.ThreePartImageCellFactory;
 import com.layer.ui.typingindicators.BubbleTypingIndicatorFactory;
+import com.layer.ui.util.imagecache.ImageCacheWrapper;
 import com.layer.ui.util.views.SwipeableItem;
 import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
@@ -101,8 +102,10 @@ public class MessagesListActivity extends BaseActivity {
             return;
         }
 
+        ImageCacheWrapper imageCacheWrapper = Util.getImageCacheWrapper();
+
         mAddressBar = ((AddressBar) findViewById(R.id.conversation_launcher))
-                .init(getLayerClient(), Util.getImageCacheWrapper())
+                .init(getLayerClient(), imageCacheWrapper)
                 .setOnConversationClickListener(new AddressBar.OnConversationClickListener() {
                     @Override
                     public void onConversationClick(AddressBar addressBar, Conversation conversation) {

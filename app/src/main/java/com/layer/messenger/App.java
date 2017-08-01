@@ -48,6 +48,8 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
+        sInstance = this;
+
         // Enable verbose logging in debug builds
         if (BuildConfig.DEBUG) {
             com.layer.ui.util.Log.setLoggingEnabled(true);
@@ -72,9 +74,7 @@ public class App extends Application {
         // Allow the LayerClient to track app state
         LayerClient.applicationCreated(this);
 
-        com.layer.messenger.util.Util.init(this);
-
-        sInstance = this;
+        com.layer.messenger.util.Util.init(this, getLayerClient(), getPicasso());
     }
 
     public static Application getInstance() {
