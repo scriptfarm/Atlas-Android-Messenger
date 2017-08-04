@@ -41,6 +41,7 @@
     <string name="conversation_details_button_leave_group">Leave Group</string>
     <string name="conversation_details_title_participants">Participants</string>
     <string name="conversation_details_button_add_participants">Add Participants</string>
+    <string name="conversation_details_button_mark_all_read">Mark all read</string>
 
     <string name="settings_clipboard_description">Settings</string>
     <string name="settings_content_connected">Connected</string>

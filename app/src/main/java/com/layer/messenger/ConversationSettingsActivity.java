@@ -66,6 +66,8 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
         mConversation = getLayerClient().getConversation(conversationId);
         if (mConversation == null && !isFinishing()) finish();
 
+        initializeMarkAsReadButton();
+
         mParticipantAdapter = new ParticipantAdapter();
         mParticipantRecyclerView.setAdapter(mParticipantAdapter);
 
@@ -167,6 +169,21 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
     @Override
     public void onChangeEvent(LayerChangeEvent layerChangeEvent) {
         refresh();
+    }
+
+    private void initializeMarkAsReadButton() {
+        Button markAllReadButton = (Button) findViewById(R.id.mark_all_read_button);
+        if (mConversation.isReadReceiptsEnabled()) {
+            markAllReadButton.setVisibility(View.VISIBLE);
+            markAllReadButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mConversation.markAllMessagesAsRead();
+                }
+            });
+        } else {
+            markAllReadButton.setVisibility(View.GONE);
+        }
     }
 
     private class ParticipantAdapter extends RecyclerView.Adapter<ViewHolder> {

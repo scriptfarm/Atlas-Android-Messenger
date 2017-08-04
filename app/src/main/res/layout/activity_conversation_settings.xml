@@ -1,6 +1,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -64,15 +65,32 @@
 
         </LinearLayout>
 
-        <Button
-            android:id="@+id/leave_button"
-            style="?android:attr/buttonStyle"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            android:text="@string/conversation_details_button_leave_group"/>
+            android:orientation="horizontal">
+            <Button
+                android:id="@+id/mark_all_read_button"
+                style="@style/Widget.AppCompat.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/conversation_details_button_mark_all_read"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/leave_button"
+                android:theme="@style/AppTheme.RedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/conversation_details_button_leave_group"
+                tools:ignore="ButtonStyle" />
+        </LinearLayout>
 
         <View
             android:layout_width="match_parent"
@@ -100,7 +118,7 @@
 
         <Button
             android:id="@+id/add_participant_button"
-            style="?android:attr/buttonStyle"
+            style="@style/Widget.AppCompat.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="right"

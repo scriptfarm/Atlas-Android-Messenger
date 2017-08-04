@@ -12,4 +12,8 @@
         <item name="AtlasTypingIndicator">@style/AtlasTypingIndicator</item>
     </style>
 
+    <style name="AppTheme.RedButton" parent="Widget.AppCompat.Button.Colored">
+        <item name="colorButtonNormal">@color/atlas_delete_background</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
 </resources>
