@@ -5,7 +5,7 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.ui.Light">
         <!-- Apply default styles -->
-        <item name="ConversationItemsListView">@style/ConversationItemsListView</item>
+        <item name="FourPartItemsListView">@style/FourPartItemsListView</item>
         <item name="MessagesRecyclerView">@style/MessagesRecyclerView</item>
         <item name="MessageComposer">@style/MessageComposer</item>
         <item name="AddressBar">@style/AddressBar</item>

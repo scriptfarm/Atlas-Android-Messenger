@@ -19,7 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:itemHeight="@dimen/layer_ui_item_height_large"
-            app:conversationItemsAdapter="@{viewModel.conversationItemsAdapter}"
+            app:adapter="@{viewModel.conversationItemsAdapter}"
             app:itemSwipeListener = "@{viewModel.itemSwipeListener}"/>
 
         <android.support.design.widget.FloatingActionButton

@@ -5,12 +5,15 @@ import android.content.Context;
 import com.layer.messenger.App;
 import com.layer.sdk.LayerClient;
 import com.layer.ui.conversationitem.ConversationItemFormatter;
+import com.layer.ui.identity.IdentityFormatter;
+import com.layer.ui.identity.IdentityFormatterImpl;
 import com.layer.ui.messagetypes.CellFactory;
 import com.layer.ui.messagetypes.location.LocationCellFactory;
 import com.layer.ui.messagetypes.singlepartimage.SinglePartImageCellFactory;
 import com.layer.ui.messagetypes.text.TextCellFactory;
 import com.layer.ui.messagetypes.threepartimage.ThreePartImageCellFactory;
 import com.layer.ui.util.LayerDateFormatter;
+import com.layer.ui.util.LayerDateFormatterImpl;
 import com.layer.ui.util.imagecache.ImageCacheWrapper;
 import com.layer.ui.util.imagecache.PicassoImageCacheWrapper;
 import com.squareup.picasso.Picasso;
@@ -28,6 +31,7 @@ public class Util {
     private static Set<CellFactory> sCellFactories;
     private static ImageCacheWrapper sImageCacheWrapper;
     private static LayerDateFormatter sLayerDateFormatter;
+    private static IdentityFormatter sIdentityFormatter;
 
     public static void init(Context context, LayerClient layerClient, Picasso picasso) {
         DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
@@ -80,5 +84,12 @@ public class Util {
             sLayerDateFormatter = new LayerDateFormatterImpl(context);
         }
         return sLayerDateFormatter;
+    }
+
+    public static IdentityFormatter getIdentityFormatter() {
+        if (sIdentityFormatter == null) {
+            sIdentityFormatter = new IdentityFormatterImpl();
+        }
+        return sIdentityFormatter;
     }
 }

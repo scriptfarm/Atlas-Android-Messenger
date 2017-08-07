@@ -3,29 +3,24 @@ package com.layer.messenger;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.layer.ui.avatar.AvatarView;
-import com.layer.ui.avatar.AvatarViewModelImpl;
-import com.layer.ui.avatar.IdentityNameFormatterImpl;
-import com.layer.ui.presence.PresenceView;
-import com.layer.ui.util.IdentityDisplayNameComparator;
+import com.layer.messenger.databinding.ActivityConversationSettingsBinding;
 import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.changes.LayerChangeEvent;
@@ -34,48 +29,94 @@ import com.layer.sdk.listeners.LayerPolicyListener;
 import com.layer.sdk.messaging.Conversation;
 import com.layer.sdk.messaging.Identity;
 import com.layer.sdk.policy.Policy;
-import com.layer.ui.util.imagecache.requesthandlers.MessagePartRequestHandler;
+import com.layer.ui.identity.IdentityItemsListView;
+import com.layer.ui.identity.IdentityItemsListViewModel;
+import com.layer.ui.recyclerview.OnItemClickListener;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ConversationSettingsActivity extends BaseActivity implements LayerPolicyListener, LayerChangeEventListener {
+public class ConversationSettingsActivity extends AppCompatActivity implements LayerPolicyListener, LayerChangeEventListener {
     private EditText mConversationName;
     private Switch mShowNotifications;
-    private RecyclerView mParticipantRecyclerView;
+    private IdentityItemsListView mParticipantRecyclerView;
     private Button mLeaveButton;
     private Button mAddParticipantsButton;
 
     private Conversation mConversation;
-    private ParticipantAdapter mParticipantAdapter;
-    private MessagePartRequestHandler messagePartRequestHandler;
-
-    public ConversationSettingsActivity() {
-        super(R.layout.activity_conversation_settings, R.menu.menu_conversation_details, R.string.title_conversation_details, true);
-    }
+    private IdentityItemsListViewModel mItemsListViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mConversationName = (EditText) findViewById(R.id.conversation_name);
-        mShowNotifications = (Switch) findViewById(R.id.show_notifications_switch);
-        mParticipantRecyclerView = (RecyclerView) findViewById(R.id.participants);
-        mLeaveButton = (Button) findViewById(R.id.leave_button);
-        mAddParticipantsButton = (Button) findViewById(R.id.add_participant_button);
+
+        ActivityConversationSettingsBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_conversation_settings);
+
+        setTitle(R.string.title_conversation_details);
+
+        mConversationName = binding.conversationName;
+        mShowNotifications = binding.showNotificationsSwitch;
+        mParticipantRecyclerView = binding.participants;
+        mLeaveButton = binding.leaveButton;
+        mAddParticipantsButton = binding.addParticipantButton;
 
         // Get Conversation from Intent extras
         Uri conversationId = getIntent().getParcelableExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY);
-        mConversation = getLayerClient().getConversation(conversationId);
+        mConversation = App.getLayerClient().getConversation(conversationId);
         if (mConversation == null && !isFinishing()) finish();
 
-        mParticipantAdapter = new ParticipantAdapter();
-        mParticipantRecyclerView.setAdapter(mParticipantAdapter);
+        Set<Identity> participants = mConversation.getParticipants();
+        participants.remove(App.getLayerClient().getAuthenticatedUser());
 
-        LinearLayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        mParticipantRecyclerView.setLayoutManager(manager);
+        mItemsListViewModel = new IdentityItemsListViewModel(this, App.getLayerClient(), Util.getImageCacheWrapper(), Util.getLayerDateFormatter(this), Util.getIdentityFormatter());
+        mItemsListViewModel.setIdentities(participants);
+
+        mItemsListViewModel.setItemClickListener(new OnItemClickListener<Identity>() {
+            @Override
+            public void onItemClick(final Identity item) {
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(ConversationSettingsActivity.this)
+                        .setMessage(Util.getIdentityFormatter().getDisplayName(item));
+
+                if (mConversation.getParticipants().size() > 2) {
+                    builder.setNeutralButton(R.string.alert_button_remove, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            mConversation.removeParticipants(item);
+                        }
+                    });
+                }
+
+                final Policy blockPolicy = getBlockPolicy(App.getLayerClient(), item);
+
+                builder.setPositiveButton(blockPolicy == null ? R.string.alert_button_block : R.string.alert_button_unblock,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                if (blockPolicy == null) {
+                                    // Block
+                                    Policy policy = new Policy.Builder(Policy.PolicyType.BLOCK).sentByUserId(item.getUserId()).build();
+                                    App.getLayerClient().addPolicy(policy);
+                                } else {
+                                    App.getLayerClient().removePolicy(blockPolicy);
+                                }
+                            }
+                        }).setNegativeButton(R.string.alert_button_cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).show();
+            }
+
+            @Override
+            public boolean onItemLongClick(Identity item) {
+                return false;
+            }
+        });
+
+        binding.setViewModel(mItemsListViewModel);
 
         mConversationName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -102,7 +143,7 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
             @Override
             public void onClick(View v) {
                 setEnabled(false);
-                mConversation.removeParticipants(getLayerClient().getAuthenticatedUser());
+                mConversation.removeParticipants(App.getLayerClient().getAuthenticatedUser());
                 refresh();
                 Intent intent = new Intent(ConversationSettingsActivity.this, ConversationsListActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -120,19 +161,92 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        App.getLayerClient().registerPolicyListener(this).registerEventListener(this);
+        setEnabled(true);
+        refresh();
+    }
+
+    @Override
+    protected void onPause() {
+        App.getLayerClient().unregisterPolicyListener(this).unregisterEventListener(this);
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mParticipantRecyclerView != null) {
+            mParticipantRecyclerView.onDestroy();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        int menuResId = R.menu.menu_conversation_details;
+        getMenuInflater().inflate(menuResId, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                // Menu "Navigate Up" acts like hardware back button
+                onBackPressed();
+                return true;
+            case R.id.action_settings:
+                startActivity(new Intent(this, AppSettingsActivity.class));
+                return true;
+
+            case R.id.action_sendlogs:
+                LayerClient.sendLogs(App.getLayerClient(), this);
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar == null) {
+            super.setTitle(title);
+        } else {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle(title);
+            actionBar.setDisplayHomeAsUpEnabled(false);
+        }
+    }
+
+    @Override
+    public void setTitle(int titleId) {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar == null) {
+            super.setTitle(titleId);
+        } else {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle(titleId);
+            actionBar.setDisplayHomeAsUpEnabled(false);
+        }
+    }
+
     public void setEnabled(boolean enabled) {
         mShowNotifications.setEnabled(enabled);
         mLeaveButton.setEnabled(enabled);
     }
 
     private void refresh() {
-        if (!getLayerClient().isAuthenticated()) return;
+        if (!App.getLayerClient().isAuthenticated()) return;
 
         mConversationName.setText(Util.getConversationItemFormatter().getConversationMetadataTitle(mConversation));
         mShowNotifications.setChecked(PushNotificationReceiver.getNotifications(this).isEnabled(mConversation.getId()));
 
         Set<Identity> participantsMinusMe = new HashSet<>(mConversation.getParticipants());
-        participantsMinusMe.remove(getLayerClient().getAuthenticatedUser());
+        participantsMinusMe.remove(App.getLayerClient().getAuthenticatedUser());
 
         if (participantsMinusMe.size() == 0) {
             // I've been removed
@@ -147,21 +261,19 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
             mConversationName.setEnabled(true);
             mLeaveButton.setVisibility(View.VISIBLE);
         }
-        mParticipantAdapter.refresh();
+
+        mItemsListViewModel.setIdentities(participantsMinusMe);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        getLayerClient().registerPolicyListener(this).registerEventListener(this);
-        setEnabled(true);
-        refresh();
-    }
+    private Policy getBlockPolicy(LayerClient client, Identity identity) {
+        for (Policy policy : client.getPolicies()) {
+            if (policy.getPolicyType() == Policy.PolicyType.BLOCK
+                    && policy.getSentByUserID().equals(identity.getUserId())) {
+                return policy;
+            }
+        }
 
-    @Override
-    protected void onPause() {
-        getLayerClient().unregisterPolicyListener(this).unregisterEventListener(this);
-        super.onPause();
+        return null;
     }
 
     @Override
@@ -172,120 +284,5 @@ public class ConversationSettingsActivity extends BaseActivity implements LayerP
     @Override
     public void onChangeEvent(LayerChangeEvent layerChangeEvent) {
         refresh();
-    }
-
-    private class ParticipantAdapter extends RecyclerView.Adapter<ViewHolder> {
-        List<Identity> mParticipants = new ArrayList<>();
-
-        public void refresh() {
-            // Get new sorted list of Participants
-            mParticipants.clear();
-            Set<Identity> conversationParticipants = mConversation.getParticipants();
-            conversationParticipants.remove(getLayerClient().getAuthenticatedUser());
-            mParticipants.addAll(conversationParticipants);
-            Collections.sort(mParticipants, new IdentityDisplayNameComparator());
-
-            // Adjust participant container height
-            int height = Math.round(mParticipants.size() * getResources().getDimensionPixelSize(com.layer.ui.R.dimen.layer_ui_secondary_item_height));
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height);
-            mParticipantRecyclerView.setLayoutParams(params);
-
-            // Notify changes
-            notifyDataSetChanged();
-        }
-
-        @Override
-        public ViewHolder onCreateViewHolder(final ViewGroup parent, int viewType) {
-            ViewHolder viewHolder = new ViewHolder(parent);
-            viewHolder.mAvatarView.init(new AvatarViewModelImpl(Util.getImageCacheWrapper()), new IdentityNameFormatterImpl());
-            viewHolder.itemView.setTag(viewHolder);
-
-            // Click to display remove / block dialog
-            viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    final ViewHolder holder = (ViewHolder) v.getTag();
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext())
-                            .setMessage(holder.mTitle.getText().toString());
-
-                    if (mConversation.getParticipants().size() > 2) {
-                        builder.setNeutralButton(R.string.alert_button_remove, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                mConversation.removeParticipants(holder.mParticipant);
-                            }
-                        });
-                    }
-
-                    builder.setPositiveButton(holder.mBlockPolicy != null ? R.string.alert_button_unblock : R.string.alert_button_block,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    Identity participant = holder.mParticipant;
-                                    if (holder.mBlockPolicy == null) {
-                                        // Block
-                                        holder.mBlockPolicy = new Policy.Builder(Policy.PolicyType.BLOCK).sentByUserId(participant.getUserId()).build();
-                                        getLayerClient().addPolicy(holder.mBlockPolicy);
-                                        holder.mBlocked.setVisibility(View.VISIBLE);
-                                    } else {
-                                        getLayerClient().removePolicy(holder.mBlockPolicy);
-                                        holder.mBlockPolicy = null;
-                                        holder.mBlocked.setVisibility(View.INVISIBLE);
-                                    }
-                                }
-                            }).setNegativeButton(R.string.alert_button_cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    }).show();
-                }
-            });
-
-            return viewHolder;
-        }
-
-        @Override
-        public void onBindViewHolder(ViewHolder viewHolder, int position) {
-            Identity participant = mParticipants.get(position);
-            viewHolder.mTitle.setText(com.layer.ui.util.Util.getDisplayName(participant));
-            viewHolder.mAvatarView.setParticipants(participant);
-            viewHolder.mPresenceView.setParticipants(participant);
-            viewHolder.mParticipant = participant;
-
-            Policy block = null;
-            for (Policy policy : getLayerClient().getPolicies()) {
-                if (policy.getPolicyType() != Policy.PolicyType.BLOCK) continue;
-                if (!policy.getSentByUserID().equals(participant.getUserId())) continue;
-                block = policy;
-                break;
-            }
-
-            viewHolder.mBlockPolicy = block;
-            viewHolder.mBlocked.setVisibility(block == null ? View.INVISIBLE : View.VISIBLE);
-        }
-
-        @Override
-        public int getItemCount() {
-            return mParticipants.size();
-        }
-    }
-
-    private static class ViewHolder extends RecyclerView.ViewHolder {
-        AvatarView mAvatarView;
-        PresenceView mPresenceView;
-        TextView mTitle;
-        ImageView mBlocked;
-        Identity mParticipant;
-        Policy mBlockPolicy;
-
-        public ViewHolder(ViewGroup parent) {
-            super(LayoutInflater.from(parent.getContext()).inflate(R.layout.participant_item, parent, false));
-            mAvatarView = (AvatarView) itemView.findViewById(R.id.avatar);
-            mPresenceView = (PresenceView) itemView.findViewById(R.id.presence);
-            mTitle = (TextView) itemView.findViewById(R.id.title);
-            mBlocked = (ImageView) itemView.findViewById(R.id.blocked);
-        }
     }
 }

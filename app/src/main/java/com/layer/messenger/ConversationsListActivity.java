@@ -16,7 +16,7 @@ import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.messaging.Conversation;
 import com.layer.ui.adapters.ConversationItemsAdapter;
-import com.layer.ui.avatar.IdentityNameFormatterImpl;
+import com.layer.ui.identity.IdentityFormatterImpl;
 import com.layer.ui.conversation.ConversationItemsListView;
 import com.layer.ui.conversation.ConversationItemsListViewModel;
 import com.layer.ui.recyclerview.OnItemClickListener;
@@ -42,20 +42,20 @@ public class ConversationsListActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         mConversationsList = binding.conversationsList;
 
-        mConversationItemsListViewModel = new ConversationItemsListViewModel(this, App.getLayerClient(), Util.getConversationItemFormatter(), Util.getImageCacheWrapper(),new IdentityNameFormatterImpl());
+        mConversationItemsListViewModel = new ConversationItemsListViewModel(this, App.getLayerClient(), Util.getConversationItemFormatter(), Util.getImageCacheWrapper(),new IdentityFormatterImpl());
         mConversationItemsListViewModel.setItemClickListener(new OnItemClickListener<Conversation>() {
             @Override
-            public void onItemClick(Conversation conversation) {
+            public void onItemClick(Conversation item) {
                 Intent intent = new Intent(ConversationsListActivity.this, MessagesListActivity.class);
                 if (Log.isLoggable(Log.VERBOSE)) {
-                    Log.v("Launching MessagesListActivity with existing conversation ID: " + conversation.getId());
+                    Log.v("Launching MessagesListActivity with existing conversation ID: " + item.getId());
                 }
-                intent.putExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY, conversation.getId());
+                intent.putExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY, item.getId());
                 startActivity(intent);
             }
 
             @Override
-            public boolean onItemLongClick(Conversation conversation) {
+            public boolean onItemLongClick(Conversation item) {
                 return false;
             }
         });

@@ -21,7 +21,7 @@ import android.widget.Toast;
 
 import com.layer.ui.avatar.AvatarView;
 import com.layer.ui.avatar.AvatarViewModelImpl;
-import com.layer.ui.avatar.IdentityNameFormatterImpl;
+import com.layer.ui.identity.IdentityFormatterImpl;
 import com.layer.ui.presence.PresenceView;
 import com.layer.ui.util.Util;
 import com.layer.messenger.util.ConversationSettingsTaskLoader;
@@ -105,7 +105,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         mDiskAllowance = (TextView) findViewById(R.id.disk_allowance);
         mAutoDownloadMimeTypes = (TextView) findViewById(R.id.auto_download_mime_types);
 
-        mAvatarView.init(new AvatarViewModelImpl(com.layer.messenger.util.Util.getImageCacheWrapper()), new IdentityNameFormatterImpl());
+        mAvatarView.init(new AvatarViewModelImpl(com.layer.messenger.util.Util.getImageCacheWrapper()), new IdentityFormatterImpl());
 
         getSupportLoaderManager().initLoader(R.id.setting_loader_id, null, this);
 
