@@ -3,33 +3,21 @@ package com.layer.messenger;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
 
-import com.layer.ui.AddressBar;
-import com.layer.ui.HistoricMessagesFetchLayout;
-import com.layer.ui.MessageComposer;
-import com.layer.ui.MessagesRecyclerView;
-import com.layer.ui.TypingIndicatorLayout;
-import com.layer.ui.messagetypes.generic.GenericCellFactory;
-import com.layer.ui.messagetypes.location.LocationCellFactory;
-import com.layer.ui.messagetypes.location.LocationSender;
-import com.layer.ui.messagetypes.singlepartimage.SinglePartImageCellFactory;
-import com.layer.ui.messagetypes.text.TextCellFactory;
-import com.layer.ui.messagetypes.text.TextSender;
-import com.layer.ui.messagetypes.threepartimage.CameraSender;
-import com.layer.ui.messagetypes.threepartimage.GallerySender;
-import com.layer.ui.messagetypes.threepartimage.ThreePartImageCellFactory;
-import com.layer.ui.typingindicators.BubbleTypingIndicatorFactory;
-import com.layer.ui.util.imagecache.ImageCacheWrapper;
-import com.layer.ui.util.views.SwipeableItem;
+import com.layer.messenger.databinding.ActivityMessagesListBinding;
 import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.changes.LayerChange;
@@ -41,14 +29,36 @@ import com.layer.sdk.messaging.ConversationOptions;
 import com.layer.sdk.messaging.Identity;
 import com.layer.sdk.messaging.LayerObject;
 import com.layer.sdk.messaging.Message;
+import com.layer.ui.AddressBar;
+import com.layer.ui.HistoricMessagesFetchLayout;
+import com.layer.ui.MessageComposer;
+import com.layer.ui.MessagesRecyclerView;
+import com.layer.ui.TypingIndicatorLayout;
+import com.layer.ui.message.MessageItemsListViewModel;
+import com.layer.ui.message.messagetypes.CellFactory;
+import com.layer.ui.message.messagetypes.generic.GenericCellFactory;
+import com.layer.ui.message.messagetypes.location.LocationCellFactory;
+import com.layer.ui.message.messagetypes.location.LocationSender;
+import com.layer.ui.message.messagetypes.singlepartimage.SinglePartImageCellFactory;
+import com.layer.ui.message.messagetypes.text.TextCellFactory;
+import com.layer.ui.message.messagetypes.text.TextSender;
+import com.layer.ui.message.messagetypes.threepartimage.CameraSender;
+import com.layer.ui.message.messagetypes.threepartimage.GallerySender;
+import com.layer.ui.message.messagetypes.threepartimage.ThreePartImageCellFactory;
+import com.layer.ui.typingindicators.BubbleTypingIndicatorFactory;
+import com.layer.ui.util.imagecache.ImageCacheWrapper;
+import com.layer.ui.util.views.SwipeableItem;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-public class MessagesListActivity extends BaseActivity {
+public class MessagesListActivity extends AppCompatActivity {
     private UiState mState;
     private Conversation mConversation;
 
+    private MessageItemsListViewModel mMessageItemsListViewModel;
     private AddressBar mAddressBar;
     private HistoricMessagesFetchLayout mHistoricFetchLayout;
     private MessagesRecyclerView mMessagesList;
@@ -56,8 +66,16 @@ public class MessagesListActivity extends BaseActivity {
     private MessageComposer mMessageComposer;
     private IdentityChangeListener mIdentityChangeListener;
 
+    private final int mLayoutResId;
+    private final int mMenuResId;
+    private final int mMenuTitleResId;
+    private final boolean mMenuBackEnabled;
+
     public MessagesListActivity() {
-        super(R.layout.activity_messages_list, R.menu.menu_messages_list, R.string.title_select_conversation, true);
+        mLayoutResId = R.layout.activity_messages_list;
+        mMenuResId = R.menu.menu_messages_list;
+        mMenuTitleResId = R.string.title_select_conversation;
+        mMenuBackEnabled = true;
     }
 
     private void setUiState(UiState state) {
@@ -97,6 +115,12 @@ public class MessagesListActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar == null) return;
+        if (mMenuBackEnabled) actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle(mMenuTitleResId);
+
         if (App.routeLogin(this)) {
             if (!isFinishing()) finish();
             return;
@@ -104,7 +128,14 @@ public class MessagesListActivity extends BaseActivity {
 
         ImageCacheWrapper imageCacheWrapper = Util.getImageCacheWrapper();
 
-        mAddressBar = ((AddressBar) findViewById(R.id.conversation_launcher))
+        mMessageItemsListViewModel = new MessageItemsListViewModel(this, getLayerClient(),
+                imageCacheWrapper, Util.getDateFormatter(this));
+
+        ActivityMessagesListBinding activityMessagesListBinding = DataBindingUtil.setContentView(this, R.layout.activity_messages_list);
+
+        activityMessagesListBinding.setViewModel(mMessageItemsListViewModel);
+
+        mAddressBar = activityMessagesListBinding.conversationLauncher
                 .init(getLayerClient(), imageCacheWrapper)
                 .setOnConversationClickListener(new AddressBar.OnConversationClickListener() {
                     @Override
@@ -157,19 +188,23 @@ public class MessagesListActivity extends BaseActivity {
                     }
                 });
 
-        mHistoricFetchLayout = ((HistoricMessagesFetchLayout) findViewById(R.id.historic_sync_layout))
+        mHistoricFetchLayout = activityMessagesListBinding.historicSyncLayout
                 .init(getLayerClient())
                 .setHistoricMessagesPerFetch(20);
 
-        mMessagesList = ((MessagesRecyclerView) findViewById(R.id.messages_list))
-                .init(getLayerClient(), Util.getImageCacheWrapper(), Util.getLayerDateFormatter(this))
-                .addCellFactories(
-                        new TextCellFactory(),
-                        new ThreePartImageCellFactory(this, getLayerClient(), getPicasso()),
-                        new LocationCellFactory(this, getPicasso()),
-                        new SinglePartImageCellFactory(this, getLayerClient(), getPicasso()),
-                        new GenericCellFactory())
-                .setOnMessageSwipeListener(new SwipeableItem.OnSwipeListener<Message>() {
+
+
+        List<CellFactory> cellFactories = new ArrayList<CellFactory>(Arrays.asList(
+                new TextCellFactory(),
+                new ThreePartImageCellFactory(getLayerClient(), imageCacheWrapper),
+                new LocationCellFactory(imageCacheWrapper),
+                new SinglePartImageCellFactory(getLayerClient(), imageCacheWrapper),
+                new GenericCellFactory()));
+        mMessageItemsListViewModel.setCellFactories(cellFactories);
+
+        mMessagesList = activityMessagesListBinding.messagesList;
+
+        mMessageItemsListViewModel.setOnMessageItemSwipeListener(new SwipeableItem.OnItemSwipeListener<Message>() {
                     @Override
                     public void onSwipe(final Message message, int direction) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(MessagesListActivity.this)
@@ -178,7 +213,7 @@ public class MessagesListActivity extends BaseActivity {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         // TODO: simply update this one message
-                                        mMessagesList.getAdapter().notifyDataSetChanged();
+                                        mMessageItemsListViewModel.getMessageItemsAdapter().notifyDataSetChanged();
                                         dialog.dismiss();
                                     }
                                 })
@@ -212,7 +247,7 @@ public class MessagesListActivity extends BaseActivity {
                     }
                 });
 
-        mMessageComposer = ((MessageComposer) findViewById(R.id.message_composer))
+        mMessageComposer = activityMessagesListBinding.messageComposer
                 .init(getLayerClient())
                 .setTextSender(new TextSender())
                 .addAttachmentSenders(
@@ -247,6 +282,8 @@ public class MessagesListActivity extends BaseActivity {
                 }
             }
         }
+        activityMessagesListBinding.setViewModel(mMessageItemsListViewModel);
+        activityMessagesListBinding.executePendingBindings();
         setConversation(conversation, conversation != null);
     }
 
@@ -255,6 +292,14 @@ public class MessagesListActivity extends BaseActivity {
         // Clear any notifications for this conversation
         PushNotificationReceiver.getNotifications(this).clear(mConversation);
         super.onResume();
+        LayerClient client = App.getLayerClient();
+        if (client == null) return;
+        if (client.isAuthenticated()) {
+            client.connect();
+        } else {
+            client.authenticate();
+        }
+
         setTitle(mConversation != null);
 
         // Register for identity changes and update the activity's title as needed
@@ -274,7 +319,9 @@ public class MessagesListActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mMessagesList.onDestroy();
+        if (mMessagesList != null) {
+            mMessagesList.onDestroy();
+        }
     }
 
     public void setTitle(boolean useConversation) {
@@ -324,7 +371,12 @@ public class MessagesListActivity extends BaseActivity {
             case R.id.action_sendlogs:
                 LayerClient.sendLogs(getLayerClient(), this);
                 return true;
+            case android.R.id.home:
+                // Menu "Navigate Up" acts like hardware back button
+                onBackPressed();
+                return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -364,5 +416,15 @@ public class MessagesListActivity extends BaseActivity {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(mMenuResId, menu);
+        return true;
+    }
+
+    protected LayerClient getLayerClient() {
+        return App.getLayerClient();
     }
 }

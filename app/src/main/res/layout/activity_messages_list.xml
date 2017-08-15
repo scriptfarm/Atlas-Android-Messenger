@@ -1,30 +1,43 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable
+            name="viewModel"
+            type="com.layer.ui.message.MessageItemsListViewModel" />
+    </data>
 
-    <com.layer.ui.AddressBar
-        android:id="@+id/conversation_launcher"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <com.layer.ui.HistoricMessagesFetchLayout
-        android:id="@+id/historic_sync_layout"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <com.layer.ui.MessagesRecyclerView
-            android:id="@+id/messages_list"
+        <com.layer.ui.AddressBar
+            android:id="@+id/conversation_launcher"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="wrap_content"/>
 
-    </com.layer.ui.HistoricMessagesFetchLayout>
+        <com.layer.ui.HistoricMessagesFetchLayout
+            android:id="@+id/historic_sync_layout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
-    <com.layer.ui.MessageComposer
-        android:id="@+id/message_composer"
-        android:layout_width="match_parent"
-        android:minHeight="48dp"
-        android:layout_height="wrap_content"
-        android:visibility="gone"/>
-</LinearLayout>
+            <com.layer.ui.MessagesRecyclerView
+                android:id="@+id/messages_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:adapter="@{viewModel.messageItemsAdapter}"
+                app:cellFactories="@{viewModel.CellFactories}"
+                app:onMessageSwipeListener="@{viewModel.onMessageSwipeListener}"/>
+
+        </com.layer.ui.HistoricMessagesFetchLayout>
+
+        <com.layer.ui.MessageComposer
+            android:id="@+id/message_composer"
+            android:layout_width="match_parent"
+            android:minHeight="48dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"/>
+    </LinearLayout>
+</layout>
+

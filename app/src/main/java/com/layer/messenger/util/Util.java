@@ -7,13 +7,13 @@ import com.layer.sdk.LayerClient;
 import com.layer.ui.conversationitem.ConversationItemFormatter;
 import com.layer.ui.identity.IdentityFormatter;
 import com.layer.ui.identity.IdentityFormatterImpl;
-import com.layer.ui.messagetypes.CellFactory;
-import com.layer.ui.messagetypes.location.LocationCellFactory;
-import com.layer.ui.messagetypes.singlepartimage.SinglePartImageCellFactory;
-import com.layer.ui.messagetypes.text.TextCellFactory;
-import com.layer.ui.messagetypes.threepartimage.ThreePartImageCellFactory;
-import com.layer.ui.util.LayerDateFormatter;
-import com.layer.ui.util.LayerDateFormatterImpl;
+import com.layer.ui.message.messagetypes.CellFactory;
+import com.layer.ui.message.messagetypes.location.LocationCellFactory;
+import com.layer.ui.message.messagetypes.singlepartimage.SinglePartImageCellFactory;
+import com.layer.ui.message.messagetypes.text.TextCellFactory;
+import com.layer.ui.message.messagetypes.threepartimage.ThreePartImageCellFactory;
+import com.layer.ui.util.*;
+import com.layer.ui.util.DateFormatterImpl;
 import com.layer.ui.util.imagecache.ImageCacheWrapper;
 import com.layer.ui.util.imagecache.PicassoImageCacheWrapper;
 import com.squareup.picasso.Picasso;
@@ -30,8 +30,8 @@ public class Util {
     private static ConversationItemFormatter sConversationItemFormatter;
     private static Set<CellFactory> sCellFactories;
     private static ImageCacheWrapper sImageCacheWrapper;
-    private static LayerDateFormatter sLayerDateFormatter;
     private static IdentityFormatter sIdentityFormatter;
+    private static DateFormatter sDateFormatter;
 
     public static void init(Context context, LayerClient layerClient, Picasso picasso) {
         DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
@@ -47,9 +47,9 @@ public class Util {
         if (sCellFactories == null || sCellFactories.isEmpty()) {
             sCellFactories = new HashSet<>();
             sCellFactories.add(new TextCellFactory());
-            sCellFactories.add(new ThreePartImageCellFactory(layerClient, picasso));
-            sCellFactories.add(new SinglePartImageCellFactory(layerClient, picasso));
-            sCellFactories.add(new LocationCellFactory(picasso));
+            sCellFactories.add(new ThreePartImageCellFactory(layerClient, sImageCacheWrapper));
+            sCellFactories.add(new SinglePartImageCellFactory(layerClient, sImageCacheWrapper));
+            sCellFactories.add(new LocationCellFactory(sImageCacheWrapper));
 
             if (sConversationItemFormatter !=null) {
                 sConversationItemFormatter.setCellFactories(sCellFactories);
@@ -79,11 +79,11 @@ public class Util {
         return sImageCacheWrapper;
     }
 
-    public static LayerDateFormatter getLayerDateFormatter(Context context) {
-        if (sLayerDateFormatter == null) {
-            sLayerDateFormatter = new LayerDateFormatterImpl(context);
+    public static DateFormatter getDateFormatter(Context context) {
+        if (sDateFormatter == null) {
+            sDateFormatter = new DateFormatterImpl(context);
         }
-        return sLayerDateFormatter;
+        return sDateFormatter;
     }
 
     public static IdentityFormatter getIdentityFormatter() {

@@ -69,7 +69,7 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
         Set<Identity> participants = mConversation.getParticipants();
         participants.remove(App.getLayerClient().getAuthenticatedUser());
 
-        mItemsListViewModel = new IdentityItemsListViewModel(this, App.getLayerClient(), Util.getImageCacheWrapper(), Util.getLayerDateFormatter(this), Util.getIdentityFormatter());
+        mItemsListViewModel = new IdentityItemsListViewModel(this, App.getLayerClient(), Util.getImageCacheWrapper(), Util.getDateFormatter(this), Util.getIdentityFormatter());
         mItemsListViewModel.setIdentities(participants);
 
         mItemsListViewModel.setItemClickListener(new OnItemClickListener<Identity>() {

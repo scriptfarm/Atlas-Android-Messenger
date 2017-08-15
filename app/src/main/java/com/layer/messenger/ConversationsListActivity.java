@@ -16,9 +16,9 @@ import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.messaging.Conversation;
 import com.layer.ui.adapters.ConversationItemsAdapter;
-import com.layer.ui.identity.IdentityFormatterImpl;
 import com.layer.ui.conversation.ConversationItemsListView;
 import com.layer.ui.conversation.ConversationItemsListViewModel;
+import com.layer.ui.identity.IdentityFormatterImpl;
 import com.layer.ui.recyclerview.OnItemClickListener;
 import com.layer.ui.util.views.SwipeableItem;
 
@@ -69,8 +69,8 @@ public class ConversationsListActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 ConversationItemsAdapter adapter = mConversationItemsListViewModel.getConversationItemsAdapter();
-                                int position = adapter.getPosition(conversation);
-                                adapter.notifyItemChanged(position);
+                                // TODO: simply update this one message
+                                adapter.notifyDataSetChanged();
                                 dialog.dismiss();
                             }
                         })
