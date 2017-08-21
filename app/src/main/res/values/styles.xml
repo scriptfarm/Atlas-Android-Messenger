@@ -7,7 +7,7 @@
         <!-- Apply default styles -->
         <item name="FourPartItemsListView">@style/FourPartItemsListView</item>
         <item name="MessagesRecyclerView">@style/MessagesRecyclerView</item>
-        <item name="MessageComposer">@style/MessageComposer</item>
+        <item name="ComposeBar">@style/ComposeBar</item>
         <item name="AddressBar">@style/AddressBar</item>
         <item name="TypingIndicator">@style/TypingIndicator</item>
     </style>

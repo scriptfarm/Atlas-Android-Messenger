@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
@@ -31,9 +32,9 @@ import com.layer.sdk.messaging.LayerObject;
 import com.layer.sdk.messaging.Message;
 import com.layer.ui.AddressBar;
 import com.layer.ui.HistoricMessagesFetchLayout;
-import com.layer.ui.MessageComposer;
 import com.layer.ui.MessagesRecyclerView;
 import com.layer.ui.TypingIndicatorLayout;
+import com.layer.ui.composebar.ComposeBar;
 import com.layer.ui.message.MessageItemsListViewModel;
 import com.layer.ui.message.messagetypes.CellFactory;
 import com.layer.ui.message.messagetypes.generic.GenericCellFactory;
@@ -63,7 +64,7 @@ public class MessagesListActivity extends AppCompatActivity {
     private HistoricMessagesFetchLayout mHistoricFetchLayout;
     private MessagesRecyclerView mMessagesList;
     private TypingIndicatorLayout mTypingIndicator;
-    private MessageComposer mMessageComposer;
+    private ComposeBar mComposeBar;
     private IdentityChangeListener mIdentityChangeListener;
 
     private final int mLayoutResId;
@@ -86,28 +87,28 @@ public class MessagesListActivity extends AppCompatActivity {
                 mAddressBar.setVisibility(View.VISIBLE);
                 mAddressBar.setSuggestionsVisibility(View.VISIBLE);
                 mHistoricFetchLayout.setVisibility(View.GONE);
-                mMessageComposer.setVisibility(View.GONE);
+                mComposeBar.setVisibility(View.GONE);
                 break;
 
             case ADDRESS_COMPOSER:
                 mAddressBar.setVisibility(View.VISIBLE);
                 mAddressBar.setSuggestionsVisibility(View.VISIBLE);
                 mHistoricFetchLayout.setVisibility(View.GONE);
-                mMessageComposer.setVisibility(View.VISIBLE);
+                mComposeBar.setVisibility(View.VISIBLE);
                 break;
 
             case ADDRESS_CONVERSATION_COMPOSER:
                 mAddressBar.setVisibility(View.VISIBLE);
                 mAddressBar.setSuggestionsVisibility(View.GONE);
                 mHistoricFetchLayout.setVisibility(View.VISIBLE);
-                mMessageComposer.setVisibility(View.VISIBLE);
+                mComposeBar.setVisibility(View.VISIBLE);
                 break;
 
             case CONVERSATION_COMPOSER:
                 mAddressBar.setVisibility(View.GONE);
                 mAddressBar.setSuggestionsVisibility(View.GONE);
                 mHistoricFetchLayout.setVisibility(View.VISIBLE);
-                mMessageComposer.setVisibility(View.VISIBLE);
+                mComposeBar.setVisibility(View.VISIBLE);
                 break;
         }
     }
@@ -152,7 +153,7 @@ public class MessagesListActivity extends AppCompatActivity {
                             return;
                         }
                         try {
-                            setConversation(getLayerClient().newConversation(new ConversationOptions().distinct(true), new HashSet<>(participants)), false);
+                            setConversation(App.getLayerClient().newConversation(new ConversationOptions().distinct(true), new HashSet<>(participants)), false);
                         } catch (LayerConversationException e) {
                             setConversation(e.getConversation(), false);
                         }
@@ -193,7 +194,6 @@ public class MessagesListActivity extends AppCompatActivity {
                 .setHistoricMessagesPerFetch(20);
 
 
-
         List<CellFactory> cellFactories = new ArrayList<CellFactory>(Arrays.asList(
                 new TextCellFactory(),
                 new ThreePartImageCellFactory(getLayerClient(), imageCacheWrapper),
@@ -205,40 +205,40 @@ public class MessagesListActivity extends AppCompatActivity {
         mMessagesList = activityMessagesListBinding.messagesList;
 
         mMessageItemsListViewModel.setOnMessageItemSwipeListener(new SwipeableItem.OnItemSwipeListener<Message>() {
-                    @Override
-                    public void onSwipe(final Message message, int direction) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(MessagesListActivity.this)
-                                .setMessage(R.string.alert_message_delete_message)
-                                .setNegativeButton(R.string.alert_button_cancel, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        // TODO: simply update this one message
-                                        mMessageItemsListViewModel.getMessageItemsAdapter().notifyDataSetChanged();
-                                        dialog.dismiss();
-                                    }
-                                })
+            @Override
+            public void onSwipe(final Message message, int direction) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MessagesListActivity.this)
+                        .setMessage(R.string.alert_message_delete_message)
+                        .setNegativeButton(R.string.alert_button_cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // TODO: simply update this one message
+                                mMessageItemsListViewModel.getMessageItemsAdapter().notifyDataSetChanged();
+                                dialog.dismiss();
+                            }
+                        })
 
-                                .setPositiveButton(R.string.alert_button_delete_all_participants, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        message.delete(LayerClient.DeletionMode.ALL_PARTICIPANTS);
-                                    }
-                                });
-                        // User delete is only available if read receipts are enabled
-                        if (message.getConversation().isReadReceiptsEnabled()) {
-                            builder.setNeutralButton(R.string.alert_button_delete_my_devices, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    message.delete(LayerClient.DeletionMode.ALL_MY_DEVICES);
-                                }
-                            });
+                        .setPositiveButton(R.string.alert_button_delete_all_participants, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                message.delete(LayerClient.DeletionMode.ALL_PARTICIPANTS);
+                            }
+                        });
+                // User delete is only available if read receipts are enabled
+                if (message.getConversation().isReadReceiptsEnabled()) {
+                    builder.setNeutralButton(R.string.alert_button_delete_my_devices, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            message.delete(LayerClient.DeletionMode.ALL_MY_DEVICES);
                         }
-                        builder.show();
-                    }
-                });
+                    });
+                }
+                builder.show();
+            }
+        });
 
         mTypingIndicator = new TypingIndicatorLayout(this)
-                .init(getLayerClient())
+                .init(App.getLayerClient())
                 .setTypingIndicatorFactory(new BubbleTypingIndicatorFactory())
                 .setTypingActivityListener(new TypingIndicatorLayout.TypingActivityListener() {
                     @Override
@@ -247,24 +247,24 @@ public class MessagesListActivity extends AppCompatActivity {
                     }
                 });
 
-        mMessageComposer = activityMessagesListBinding.messageComposer
-                .init(getLayerClient())
-                .setTextSender(new TextSender())
-                .addAttachmentSenders(
-                        new CameraSender(R.string.attachment_menu_camera,
-                                R.drawable.ic_photo_camera_white_24dp, this,
-                                getApplicationContext().getPackageName() + ".file_provider"),
-                        new GallerySender(R.string.attachment_menu_gallery, R.drawable.ic_photo_white_24dp, this),
-                        new LocationSender(R.string.attachment_menu_location, R.drawable.ic_place_white_24dp, this))
-                .setOnMessageEditTextFocusChangeListener(new View.OnFocusChangeListener() {
-                    @Override
-                    public void onFocusChange(View v, boolean hasFocus) {
-                        if (hasFocus) {
-                            setUiState(UiState.CONVERSATION_COMPOSER);
-                            setTitle(true);
-                        }
-                    }
-                });
+        mComposeBar = activityMessagesListBinding.composeBar;
+        mComposeBar.setTextSender(new TextSender(this, App.getLayerClient()));
+        mComposeBar.addAttachmentSendersToDefaultAttachmentButton(
+                new CameraSender(R.string.attachment_menu_camera,
+                        R.drawable.ic_photo_camera_white_24dp, this, App.getLayerClient(),
+                        getApplicationContext().getPackageName() + ".file_provider"),
+                new GallerySender(R.string.attachment_menu_gallery, R.drawable.ic_photo_white_24dp, this, App.getLayerClient()),
+                new LocationSender(R.string.attachment_menu_location, R.drawable.ic_place_white_24dp, this, App.getLayerClient()));
+
+        mComposeBar.setOnMessageEditTextFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    setUiState(UiState.CONVERSATION_COMPOSER);
+                    setTitle(true);
+                }
+            }
+        });
 
         // Get or create Conversation from Intent extras
         Conversation conversation = null;
@@ -272,11 +272,11 @@ public class MessagesListActivity extends AppCompatActivity {
         if (intent != null) {
             if (intent.hasExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY)) {
                 Uri conversationId = intent.getParcelableExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY);
-                conversation = getLayerClient().getConversation(conversationId);
+                conversation = App.getLayerClient().getConversation(conversationId);
             } else if (intent.hasExtra("participantIds")) {
                 String[] participantIds = intent.getStringArrayExtra("participantIds");
                 try {
-                    conversation = getLayerClient().newConversationWithUserIds(new ConversationOptions().distinct(true), participantIds);
+                    conversation = App.getLayerClient().newConversationWithUserIds(new ConversationOptions().distinct(true), participantIds);
                 } catch (LayerConversationException e) {
                     conversation = e.getConversation();
                 }
@@ -304,7 +304,7 @@ public class MessagesListActivity extends AppCompatActivity {
 
         // Register for identity changes and update the activity's title as needed
         mIdentityChangeListener = new IdentityChangeListener();
-        getLayerClient().registerEventListener(mIdentityChangeListener);
+        App.getLayerClient().registerEventListener(mIdentityChangeListener);
     }
 
     @Override
@@ -312,7 +312,7 @@ public class MessagesListActivity extends AppCompatActivity {
         // Update the notification position to the latest seen
         PushNotificationReceiver.getNotifications(this).clear(mConversation);
 
-        getLayerClient().unregisterEventListener(mIdentityChangeListener);
+        App.getLayerClient().unregisterEventListener(mIdentityChangeListener);
         super.onPause();
     }
 
@@ -328,7 +328,7 @@ public class MessagesListActivity extends AppCompatActivity {
         if (!useConversation) {
             setTitle(R.string.title_select_conversation);
         } else {
-            setTitle(Util.getConversationItemFormatter().getConversationTitle(getLayerClient().getAuthenticatedUser(), mConversation));
+            setTitle(Util.getConversationItemFormatter().getConversationTitle(App.getLayerClient().getAuthenticatedUser(), mConversation));
         }
     }
 
@@ -337,7 +337,7 @@ public class MessagesListActivity extends AppCompatActivity {
         mHistoricFetchLayout.setConversation(conversation);
         mMessagesList.setConversation(conversation);
         mTypingIndicator.setConversation(conversation);
-        mMessageComposer.setConversation(conversation);
+        mComposeBar.setConversation(conversation, App.getLayerClient());
 
         // UI state
         if (conversation == null) {
@@ -369,7 +369,7 @@ public class MessagesListActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_sendlogs:
-                LayerClient.sendLogs(getLayerClient(), this);
+                LayerClient.sendLogs(App.getLayerClient(), this);
                 return true;
             case android.R.id.home:
                 // Menu "Navigate Up" acts like hardware back button
@@ -382,13 +382,13 @@ public class MessagesListActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        mMessageComposer.onActivityResult(this, requestCode, resultCode, data);
+        mComposeBar.onActivityResult(this, requestCode, resultCode, data);
         super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        mMessageComposer.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        mComposeBar.onRequestPermissionsResult(requestCode, permissions, grantResults);
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 

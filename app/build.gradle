@@ -12,6 +12,7 @@ android {
         versionCode 67
         versionName "$versionCode"
         testInstrumentationRunner 'com.layer.messenger.testrunner.TestButlerRunner'
+        multiDexEnabled true
 
     }
 

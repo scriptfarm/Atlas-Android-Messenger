@@ -88,4 +88,6 @@
     <string name="login_password_hint">Password</string>
     <string name="login_dialog_message">Logging In&#8230;</string>
     <string name="settings_message_placeholder">Calculating...</string>
+
+    <string name="messages_compose_bar_hint">Messages</string>
 </resources>

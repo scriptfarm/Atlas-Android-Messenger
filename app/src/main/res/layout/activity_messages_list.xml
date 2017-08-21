@@ -1,9 +1,11 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <data>
+
         <variable
             name="viewModel"
-            type="com.layer.ui.message.MessageItemsListViewModel" />
+            type="com.layer.ui.message.MessageItemsListViewModel"/>
     </data>
 
     <LinearLayout
@@ -32,12 +34,12 @@
 
         </com.layer.ui.HistoricMessagesFetchLayout>
 
-        <com.layer.ui.MessageComposer
-            android:id="@+id/message_composer"
+        <com.layer.ui.composebar.ComposeBar
+            android:id="@+id/compose_bar"
             android:layout_width="match_parent"
-            android:minHeight="48dp"
             android:layout_height="wrap_content"
+            android:hint="@string/messages_compose_bar_hint"
+            android:minHeight="48dp"
             android:visibility="gone"/>
     </LinearLayout>
 </layout>
-
