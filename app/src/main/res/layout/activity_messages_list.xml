@@ -24,13 +24,13 @@
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <com.layer.ui.MessagesRecyclerView
+            <com.layer.ui.message.MessageItemListView
                 android:id="@+id/messages_list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:adapter="@{viewModel.messageItemsAdapter}"
                 app:cellFactories="@{viewModel.CellFactories}"
-                app:onMessageSwipeListener="@{viewModel.onMessageSwipeListener}"/>
+                app:itemSwipeListener="@{viewModel.itemSwipeListener}"/>
 
         </com.layer.ui.HistoricMessagesFetchLayout>
 

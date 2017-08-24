@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
@@ -32,11 +31,11 @@ import com.layer.sdk.messaging.LayerObject;
 import com.layer.sdk.messaging.Message;
 import com.layer.ui.AddressBar;
 import com.layer.ui.HistoricMessagesFetchLayout;
-import com.layer.ui.MessagesRecyclerView;
 import com.layer.ui.TypingIndicatorLayout;
 import com.layer.ui.composebar.ComposeBar;
 import com.layer.ui.message.MessageItemsListViewModel;
 import com.layer.ui.message.messagetypes.CellFactory;
+import com.layer.ui.message.MessageItemListView;
 import com.layer.ui.message.messagetypes.generic.GenericCellFactory;
 import com.layer.ui.message.messagetypes.location.LocationCellFactory;
 import com.layer.ui.message.messagetypes.location.LocationSender;
@@ -62,7 +61,7 @@ public class MessagesListActivity extends AppCompatActivity {
     private MessageItemsListViewModel mMessageItemsListViewModel;
     private AddressBar mAddressBar;
     private HistoricMessagesFetchLayout mHistoricFetchLayout;
-    private MessagesRecyclerView mMessagesList;
+    private MessageItemListView mMessagesList;
     private TypingIndicatorLayout mTypingIndicator;
     private ComposeBar mComposeBar;
     private IdentityChangeListener mIdentityChangeListener;
@@ -204,7 +203,7 @@ public class MessagesListActivity extends AppCompatActivity {
 
         mMessagesList = activityMessagesListBinding.messagesList;
 
-        mMessageItemsListViewModel.setOnMessageItemSwipeListener(new SwipeableItem.OnItemSwipeListener<Message>() {
+        mMessageItemsListViewModel.setOnItemSwipeListener(new SwipeableItem.OnItemSwipeListener<Message>() {
             @Override
             public void onSwipe(final Message message, int direction) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MessagesListActivity.this)
