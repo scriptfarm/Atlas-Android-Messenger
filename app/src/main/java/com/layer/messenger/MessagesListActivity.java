@@ -33,9 +33,9 @@ import com.layer.ui.AddressBar;
 import com.layer.ui.HistoricMessagesFetchLayout;
 import com.layer.ui.TypingIndicatorLayout;
 import com.layer.ui.composebar.ComposeBar;
+import com.layer.ui.message.MessageItemListView;
 import com.layer.ui.message.MessageItemsListViewModel;
 import com.layer.ui.message.messagetypes.CellFactory;
-import com.layer.ui.message.MessageItemListView;
 import com.layer.ui.message.messagetypes.generic.GenericCellFactory;
 import com.layer.ui.message.messagetypes.location.LocationCellFactory;
 import com.layer.ui.message.messagetypes.location.LocationSender;
@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MessagesListActivity extends AppCompatActivity {
     private UiState mState;
@@ -241,8 +242,8 @@ public class MessagesListActivity extends AppCompatActivity {
                 .setTypingIndicatorFactory(new BubbleTypingIndicatorFactory())
                 .setTypingActivityListener(new TypingIndicatorLayout.TypingActivityListener() {
                     @Override
-                    public void onTypingActivityChange(TypingIndicatorLayout typingIndicator, boolean active) {
-                        mMessagesList.setFooterView(active ? typingIndicator : null);
+                    public void onTypingActivityChange(TypingIndicatorLayout typingIndicator, boolean active, Set<Identity> users) {
+                        mMessagesList.setFooterView(active ? typingIndicator : null, users);
                     }
                 });
 
