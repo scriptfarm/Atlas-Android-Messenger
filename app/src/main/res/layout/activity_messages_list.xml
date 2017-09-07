@@ -2,44 +2,66 @@
         xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
-
+        <import type="android.view.View"/>
         <variable
             name="viewModel"
             type="com.layer.ui.message.MessageItemsListViewModel"/>
     </data>
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
-        <com.layer.ui.AddressBar
-            android:id="@+id/conversation_launcher"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-        <com.layer.ui.HistoricMessagesFetchLayout
-            android:id="@+id/historic_sync_layout"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1">
-
-            <com.layer.ui.message.MessageItemListView
-                android:id="@+id/messages_list"
+            <com.layer.ui.AddressBar
+                android:id="@+id/conversation_launcher"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:adapter="@{viewModel.messageItemsAdapter}"
-                app:cellFactories="@{viewModel.CellFactories}"
-                app:itemSwipeListener="@{viewModel.itemSwipeListener}"/>
+                android:layout_height="wrap_content"/>
 
-        </com.layer.ui.HistoricMessagesFetchLayout>
+            <com.layer.ui.HistoricMessagesFetchLayout
+                android:id="@+id/historic_sync_layout"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
 
-        <com.layer.ui.composebar.ComposeBar
-            android:id="@+id/compose_bar"
+                <com.layer.ui.message.MessageItemListView
+                    android:id="@+id/messages_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:adapter="@{viewModel.messageItemsAdapter}"
+                    app:cellFactories="@{viewModel.CellFactories}"
+                    app:itemSwipeListener="@{viewModel.itemSwipeListener}"/>
+
+            </com.layer.ui.HistoricMessagesFetchLayout>
+
+            <com.layer.ui.composebar.ComposeBar
+                android:id="@+id/compose_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/messages_compose_bar_hint"
+                android:minHeight="48dp"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/messageItemListEmptyConversation"
+            android:layout_marginTop="@dimen/layer_ui_message_item_time_group_padding_top"
+            android:text="@{viewModel.emptyMessageText}"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/messages_compose_bar_hint"
-            android:minHeight="48dp"
-            android:visibility="gone"/>
-    </LinearLayout>
+            android:visibility="@{viewModel.isMessageSizeZero ? View.VISIBLE : View.GONE}"
+            android:layout_centerInParent="true"
+            android:textColor="@color/layer_ui_text_gray"
+            android:textSize="@dimen/layer_ui_text_size_message_item_metadata"
+            android:paddingLeft="@dimen/layer_ui_padding_normal"
+            android:paddingRight="@dimen/layer_ui_padding_normal"
+            android:gravity="center"
+            android:maxLines="2"/>
+    </RelativeLayout>
+
 </layout>
