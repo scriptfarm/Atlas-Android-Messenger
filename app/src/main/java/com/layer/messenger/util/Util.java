@@ -7,6 +7,8 @@ import com.layer.sdk.LayerClient;
 import com.layer.ui.conversationitem.ConversationItemFormatter;
 import com.layer.ui.identity.IdentityFormatter;
 import com.layer.ui.identity.IdentityFormatterImpl;
+import com.layer.ui.message.EmptyMessageFormatter;
+import com.layer.ui.message.EmptyMessageFormatterImpl;
 import com.layer.ui.message.messagetypes.CellFactory;
 import com.layer.ui.message.messagetypes.location.LocationCellFactory;
 import com.layer.ui.message.messagetypes.singlepartimage.SinglePartImageCellFactory;
@@ -32,6 +34,7 @@ public class Util {
     private static ImageCacheWrapper sImageCacheWrapper;
     private static IdentityFormatter sIdentityFormatter;
     private static DateFormatter sDateFormatter;
+    private static EmptyMessageFormatter sEmptyMessageFormatter;
 
     public static void init(Context context, LayerClient layerClient, Picasso picasso) {
         DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
@@ -91,5 +94,12 @@ public class Util {
             sIdentityFormatter = new IdentityFormatterImpl();
         }
         return sIdentityFormatter;
+    }
+
+    public static EmptyMessageFormatter getEmptyMessageFormatter() {
+        if (sEmptyMessageFormatter == null) {
+            sEmptyMessageFormatter = new EmptyMessageFormatterImpl();
+        }
+        return sEmptyMessageFormatter;
     }
 }

@@ -130,7 +130,7 @@ public class MessagesListActivity extends AppCompatActivity {
         ImageCacheWrapper imageCacheWrapper = Util.getImageCacheWrapper();
 
         mMessageItemsListViewModel = new MessageItemsListViewModel(this, getLayerClient(),
-                imageCacheWrapper, Util.getDateFormatter(this));
+                imageCacheWrapper, Util.getDateFormatter(this), Util.getEmptyMessageFormatter());
 
         ActivityMessagesListBinding activityMessagesListBinding = DataBindingUtil.setContentView(this, R.layout.activity_messages_list);
 
