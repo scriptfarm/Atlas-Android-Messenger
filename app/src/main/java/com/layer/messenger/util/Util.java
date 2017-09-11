@@ -8,11 +8,12 @@ import com.layer.ui.conversationitem.ConversationItemFormatter;
 import com.layer.ui.identity.IdentityFormatter;
 import com.layer.ui.identity.IdentityFormatterImpl;
 import com.layer.ui.message.messagetypes.CellFactory;
+import com.layer.ui.message.messagetypes.generic.GenericCellFactory;
 import com.layer.ui.message.messagetypes.location.LocationCellFactory;
 import com.layer.ui.message.messagetypes.singlepartimage.SinglePartImageCellFactory;
 import com.layer.ui.message.messagetypes.text.TextCellFactory;
 import com.layer.ui.message.messagetypes.threepartimage.ThreePartImageCellFactory;
-import com.layer.ui.util.*;
+import com.layer.ui.util.DateFormatter;
 import com.layer.ui.util.DateFormatterImpl;
 import com.layer.ui.util.imagecache.ImageCacheWrapper;
 import com.layer.ui.util.imagecache.PicassoImageCacheWrapper;
@@ -23,12 +24,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class Util {
     private static ConversationItemFormatter sConversationItemFormatter;
-    private static Set<CellFactory> sCellFactories;
+    private static List<CellFactory> sCellFactories;
     private static ImageCacheWrapper sImageCacheWrapper;
     private static IdentityFormatter sIdentityFormatter;
     private static DateFormatter sDateFormatter;
@@ -36,22 +39,24 @@ public class Util {
     public static void init(Context context, LayerClient layerClient, Picasso picasso) {
         DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
         DateFormat timeFormat = android.text.format.DateFormat.getTimeFormat(context);
-        sConversationItemFormatter = new ConversationItemFormatter(context, timeFormat, dateFormat, getCellFactories(layerClient, picasso));
+        sImageCacheWrapper = new PicassoImageCacheWrapper(picasso);
+        sConversationItemFormatter = new ConversationItemFormatter(context, timeFormat, dateFormat, getCellFactories(layerClient));
     }
 
     public static ConversationItemFormatter getConversationItemFormatter() {
         return sConversationItemFormatter;
     }
 
-    public static Set<CellFactory> getCellFactories(LayerClient layerClient, Picasso picasso) {
+    public static List<CellFactory> getCellFactories(LayerClient layerClient) {
         if (sCellFactories == null || sCellFactories.isEmpty()) {
-            sCellFactories = new HashSet<>();
+            sCellFactories = new ArrayList<>();
             sCellFactories.add(new TextCellFactory());
             sCellFactories.add(new ThreePartImageCellFactory(layerClient, sImageCacheWrapper));
             sCellFactories.add(new SinglePartImageCellFactory(layerClient, sImageCacheWrapper));
             sCellFactories.add(new LocationCellFactory(sImageCacheWrapper));
+            sCellFactories.add(new GenericCellFactory());
 
-            if (sConversationItemFormatter !=null) {
+            if (sConversationItemFormatter != null) {
                 sConversationItemFormatter.setCellFactories(sCellFactories);
             }
         }

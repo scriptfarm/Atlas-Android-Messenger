@@ -30,30 +30,18 @@ import com.layer.sdk.messaging.Identity;
 import com.layer.sdk.messaging.LayerObject;
 import com.layer.sdk.messaging.Message;
 import com.layer.ui.AddressBar;
-import com.layer.ui.HistoricMessagesFetchLayout;
-import com.layer.ui.TypingIndicatorLayout;
 import com.layer.ui.composebar.ComposeBar;
-import com.layer.ui.message.MessageItemListView;
+import com.layer.ui.conversation.ConversationView;
+import com.layer.ui.conversation.ConversationViewModel;
 import com.layer.ui.message.MessageItemsListViewModel;
-import com.layer.ui.message.messagetypes.CellFactory;
-import com.layer.ui.message.messagetypes.generic.GenericCellFactory;
-import com.layer.ui.message.messagetypes.location.LocationCellFactory;
 import com.layer.ui.message.messagetypes.location.LocationSender;
-import com.layer.ui.message.messagetypes.singlepartimage.SinglePartImageCellFactory;
-import com.layer.ui.message.messagetypes.text.TextCellFactory;
 import com.layer.ui.message.messagetypes.text.TextSender;
 import com.layer.ui.message.messagetypes.threepartimage.CameraSender;
 import com.layer.ui.message.messagetypes.threepartimage.GallerySender;
-import com.layer.ui.message.messagetypes.threepartimage.ThreePartImageCellFactory;
-import com.layer.ui.typingindicators.BubbleTypingIndicatorFactory;
-import com.layer.ui.util.imagecache.ImageCacheWrapper;
 import com.layer.ui.util.views.SwipeableItem;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class MessagesListActivity extends AppCompatActivity {
     private UiState mState;
@@ -61,88 +49,224 @@ public class MessagesListActivity extends AppCompatActivity {
 
     private MessageItemsListViewModel mMessageItemsListViewModel;
     private AddressBar mAddressBar;
-    private HistoricMessagesFetchLayout mHistoricFetchLayout;
-    private MessageItemListView mMessagesList;
-    private TypingIndicatorLayout mTypingIndicator;
+    private ConversationView mConversationView;
     private ComposeBar mComposeBar;
     private IdentityChangeListener mIdentityChangeListener;
+    private ConversationViewModel mConversationViewModel;
 
-    private final int mLayoutResId;
-    private final int mMenuResId;
-    private final int mMenuTitleResId;
-    private final boolean mMenuBackEnabled;
+    private ActivityMessagesListBinding mActivityMessagesListBinding;
+    private ActionBar mActionBar;
 
-    public MessagesListActivity() {
-        mLayoutResId = R.layout.activity_messages_list;
-        mMenuResId = R.menu.menu_messages_list;
-        mMenuTitleResId = R.string.title_select_conversation;
-        mMenuBackEnabled = true;
+    private enum UiState {
+        ADDRESS,
+        ADDRESS_COMPOSER,
+        ADDRESS_CONVERSATION_COMPOSER,
+        CONVERSATION_COMPOSER
     }
 
-    private void setUiState(UiState state) {
-        if (mState == state) return;
-        mState = state;
-        switch (state) {
-            case ADDRESS:
-                mAddressBar.setVisibility(View.VISIBLE);
-                mAddressBar.setSuggestionsVisibility(View.VISIBLE);
-                mHistoricFetchLayout.setVisibility(View.GONE);
-                mComposeBar.setVisibility(View.GONE);
-                break;
-
-            case ADDRESS_COMPOSER:
-                mAddressBar.setVisibility(View.VISIBLE);
-                mAddressBar.setSuggestionsVisibility(View.VISIBLE);
-                mHistoricFetchLayout.setVisibility(View.GONE);
-                mComposeBar.setVisibility(View.VISIBLE);
-                break;
-
-            case ADDRESS_CONVERSATION_COMPOSER:
-                mAddressBar.setVisibility(View.VISIBLE);
-                mAddressBar.setSuggestionsVisibility(View.GONE);
-                mHistoricFetchLayout.setVisibility(View.VISIBLE);
-                mComposeBar.setVisibility(View.VISIBLE);
-                break;
-
-            case CONVERSATION_COMPOSER:
-                mAddressBar.setVisibility(View.GONE);
-                mAddressBar.setSuggestionsVisibility(View.GONE);
-                mHistoricFetchLayout.setVisibility(View.VISIBLE);
-                mComposeBar.setVisibility(View.VISIBLE);
-                break;
-        }
-    }
+    //=============================================================================================
+    // Activity Lifecycle methods
+    //=============================================================================================
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar == null) return;
-        if (mMenuBackEnabled) actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle(mMenuTitleResId);
+        mActionBar = getSupportActionBar();
+        if (mActionBar == null) return;
+        mActionBar.setDisplayHomeAsUpEnabled(true);
+        mActionBar.setTitle(R.string.title_select_conversation);
 
         if (App.routeLogin(this)) {
             if (!isFinishing()) finish();
             return;
         }
 
-        ImageCacheWrapper imageCacheWrapper = Util.getImageCacheWrapper();
+        mActivityMessagesListBinding = DataBindingUtil.setContentView(this, R.layout.activity_messages_list);
 
-        mMessageItemsListViewModel = new MessageItemsListViewModel(this, getLayerClient(),
-                imageCacheWrapper, Util.getDateFormatter(this));
+        setupAddressBar();
+        Conversation conversation = getConversationFromIntent();
+        setupComposeBar();
+        setupConversation(conversation);
+    }
 
-        ActivityMessagesListBinding activityMessagesListBinding = DataBindingUtil.setContentView(this, R.layout.activity_messages_list);
+    @Override
+    protected void onResume() {
+        // Clear any notifications for this conversation
+        PushNotificationReceiver.getNotifications(this).clear(mConversation);
+        super.onResume();
+        LayerClient client = App.getLayerClient();
+        if (client == null) return;
+        if (client.isAuthenticated()) {
+            client.connect();
+        } else {
+            client.authenticate();
+        }
 
-        activityMessagesListBinding.setViewModel(mMessageItemsListViewModel);
+        setTitleFromConversationTitle(mConversation != null);
 
-        mAddressBar = activityMessagesListBinding.conversationLauncher
-                .init(getLayerClient(), imageCacheWrapper)
+        // Register for identity changes and update the activity's title as needed
+        mIdentityChangeListener = new IdentityChangeListener();
+        App.getLayerClient().registerEventListener(mIdentityChangeListener);
+    }
+
+    @Override
+    protected void onPause() {
+        // Update the notification position to the latest seen
+        PushNotificationReceiver.getNotifications(this).clear(mConversation);
+
+        App.getLayerClient().unregisterEventListener(mIdentityChangeListener);
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mConversationView != null) {
+            mConversationView.onDestroy();
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_details:
+                if (mConversation == null) return true;
+                Intent intent = new Intent(this, ConversationSettingsActivity.class);
+                intent.putExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY, mConversation.getId());
+                startActivity(intent);
+                return true;
+
+            case R.id.action_sendlogs:
+                LayerClient.sendLogs(App.getLayerClient(), this);
+                return true;
+            case android.R.id.home:
+                // Menu "Navigate Up" acts like hardware back button
+                onBackPressed();
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        mComposeBar.onActivityResult(this, requestCode, resultCode, data);
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        mComposeBar.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_messages_list, menu);
+        return true;
+    }
+
+    //=============================================================================================
+    // private methods
+    //=============================================================================================
+
+    // Get or create Conversation from Intent extras
+    private Conversation getConversationFromIntent() {
+        Conversation conversation = null;
+        Intent intent = getIntent();
+        if (intent != null) {
+            if (intent.hasExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY)) {
+                Uri conversationId = intent.getParcelableExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY);
+                conversation = App.getLayerClient().getConversation(conversationId);
+            } else if (intent.hasExtra("participantIds")) {
+                String[] participantIds = intent.getStringArrayExtra("participantIds");
+                try {
+                    conversation = App.getLayerClient().newConversationWithUserIds(new ConversationOptions().distinct(true), participantIds);
+                } catch (LayerConversationException e) {
+                    conversation = e.getConversation();
+                }
+            }
+        }
+
+        return conversation;
+    }
+
+    private void setupComposeBar() {
+        mComposeBar = mActivityMessagesListBinding.conversation.getComposeBar();
+        mComposeBar.setTextSender(new TextSender(this, App.getLayerClient()));
+        mComposeBar.addAttachmentSendersToDefaultAttachmentButton(
+                new CameraSender(R.string.attachment_menu_camera,
+                        R.drawable.ic_photo_camera_white_24dp, this, App.getLayerClient(),
+                        getApplicationContext().getPackageName() + ".file_provider"),
+                new GallerySender(R.string.attachment_menu_gallery, R.drawable.ic_photo_white_24dp, this, App.getLayerClient()),
+                new LocationSender(R.string.attachment_menu_location, R.drawable.ic_place_white_24dp, this, App.getLayerClient()));
+
+        mComposeBar.setOnMessageEditTextFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    setUiState(UiState.CONVERSATION_COMPOSER);
+                    setTitleFromConversationTitle(true);
+                }
+            }
+        });
+    }
+
+    private void setupConversation(Conversation conversation) {
+        mConversationView = mActivityMessagesListBinding.conversation;
+        mMessageItemsListViewModel = new MessageItemsListViewModel(this, App.getLayerClient(),
+                Util.getImageCacheWrapper(), Util.getDateFormatter(this));
+
+        mConversationViewModel = new ConversationViewModel(getApplicationContext(), App.getLayerClient(),
+                Util.getCellFactories(App.getLayerClient()), Util.getImageCacheWrapper(),
+                Util.getDateFormatter(getApplicationContext()),
+                new SwipeableItem.OnItemSwipeListener<Message>() {
+                    @Override
+                    public void onSwipe(final Message message, int direction) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(MessagesListActivity.this)
+                                .setMessage(R.string.alert_message_delete_message)
+                                .setNegativeButton(R.string.alert_button_cancel, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // TODO: simply update this one message
+                                        mMessageItemsListViewModel.getAdapter().notifyDataSetChanged();
+                                        dialog.dismiss();
+                                    }
+                                })
+
+                                .setPositiveButton(R.string.alert_button_delete_all_participants, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        message.delete(LayerClient.DeletionMode.ALL_PARTICIPANTS);
+                                    }
+                                });
+                        // User delete is only available if read receipts are enabled
+                        if (message.getConversation().isReadReceiptsEnabled()) {
+                            builder.setNeutralButton(R.string.alert_button_delete_my_devices, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    message.delete(LayerClient.DeletionMode.ALL_MY_DEVICES);
+                                }
+                            });
+                        }
+                        builder.show();
+                    }
+                });
+
+        mActivityMessagesListBinding.setViewModel(mConversationViewModel);
+        setConversation(conversation, conversation != null);
+        mActivityMessagesListBinding.executePendingBindings();
+    }
+
+    private void setupAddressBar() {
+        mAddressBar = mActivityMessagesListBinding.conversationLauncher
+                .init(App.getLayerClient(), Util.getImageCacheWrapper())
                 .setOnConversationClickListener(new AddressBar.OnConversationClickListener() {
                     @Override
                     public void onConversationClick(AddressBar addressBar, Conversation conversation) {
                         setConversation(conversation, true);
-                        setTitle(true);
+                        setTitleFromConversationTitle(true);
                     }
                 })
                 .setOnParticipantSelectionChangeListener(new AddressBar.OnParticipantSelectionChangeListener() {
@@ -182,162 +306,25 @@ public class MessagesListActivity extends AppCompatActivity {
                     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                         if (actionId == EditorInfo.IME_ACTION_DONE || event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
                             setUiState(UiState.CONVERSATION_COMPOSER);
-                            setTitle(true);
+                            setTitleFromConversationTitle(true);
                             return true;
                         }
                         return false;
                     }
                 });
-
-        mHistoricFetchLayout = activityMessagesListBinding.historicSyncLayout
-                .init(getLayerClient())
-                .setHistoricMessagesPerFetch(20);
-
-
-        List<CellFactory> cellFactories = new ArrayList<CellFactory>(Arrays.asList(
-                new TextCellFactory(),
-                new ThreePartImageCellFactory(getLayerClient(), imageCacheWrapper),
-                new LocationCellFactory(imageCacheWrapper),
-                new SinglePartImageCellFactory(getLayerClient(), imageCacheWrapper),
-                new GenericCellFactory()));
-        mMessageItemsListViewModel.setCellFactories(cellFactories);
-
-        mMessagesList = activityMessagesListBinding.messagesList;
-
-        mMessageItemsListViewModel.setOnItemSwipeListener(new SwipeableItem.OnItemSwipeListener<Message>() {
-            @Override
-            public void onSwipe(final Message message, int direction) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MessagesListActivity.this)
-                        .setMessage(R.string.alert_message_delete_message)
-                        .setNegativeButton(R.string.alert_button_cancel, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                // TODO: simply update this one message
-                                mMessageItemsListViewModel.getMessageItemsAdapter().notifyDataSetChanged();
-                                dialog.dismiss();
-                            }
-                        })
-
-                        .setPositiveButton(R.string.alert_button_delete_all_participants, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                message.delete(LayerClient.DeletionMode.ALL_PARTICIPANTS);
-                            }
-                        });
-                // User delete is only available if read receipts are enabled
-                if (message.getConversation().isReadReceiptsEnabled()) {
-                    builder.setNeutralButton(R.string.alert_button_delete_my_devices, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            message.delete(LayerClient.DeletionMode.ALL_MY_DEVICES);
-                        }
-                    });
-                }
-                builder.show();
-            }
-        });
-
-        mTypingIndicator = new TypingIndicatorLayout(this)
-                .init(App.getLayerClient())
-                .setTypingIndicatorFactory(new BubbleTypingIndicatorFactory())
-                .setTypingActivityListener(new TypingIndicatorLayout.TypingActivityListener() {
-                    @Override
-                    public void onTypingActivityChange(TypingIndicatorLayout typingIndicator, boolean active, Set<Identity> users) {
-                        mMessagesList.setFooterView(active ? typingIndicator : null, users);
-                    }
-                });
-
-        mComposeBar = activityMessagesListBinding.composeBar;
-        mComposeBar.setTextSender(new TextSender(this, App.getLayerClient()));
-        mComposeBar.addAttachmentSendersToDefaultAttachmentButton(
-                new CameraSender(R.string.attachment_menu_camera,
-                        R.drawable.ic_photo_camera_white_24dp, this, App.getLayerClient(),
-                        getApplicationContext().getPackageName() + ".file_provider"),
-                new GallerySender(R.string.attachment_menu_gallery, R.drawable.ic_photo_white_24dp, this, App.getLayerClient()),
-                new LocationSender(R.string.attachment_menu_location, R.drawable.ic_place_white_24dp, this, App.getLayerClient()));
-
-        mComposeBar.setOnMessageEditTextFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    setUiState(UiState.CONVERSATION_COMPOSER);
-                    setTitle(true);
-                }
-            }
-        });
-
-        // Get or create Conversation from Intent extras
-        Conversation conversation = null;
-        Intent intent = getIntent();
-        if (intent != null) {
-            if (intent.hasExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY)) {
-                Uri conversationId = intent.getParcelableExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY);
-                conversation = App.getLayerClient().getConversation(conversationId);
-            } else if (intent.hasExtra("participantIds")) {
-                String[] participantIds = intent.getStringArrayExtra("participantIds");
-                try {
-                    conversation = App.getLayerClient().newConversationWithUserIds(new ConversationOptions().distinct(true), participantIds);
-                } catch (LayerConversationException e) {
-                    conversation = e.getConversation();
-                }
-            }
-        }
-        activityMessagesListBinding.setViewModel(mMessageItemsListViewModel);
-        activityMessagesListBinding.executePendingBindings();
-        setConversation(conversation, conversation != null);
     }
 
-    @Override
-    protected void onResume() {
-        // Clear any notifications for this conversation
-        PushNotificationReceiver.getNotifications(this).clear(mConversation);
-        super.onResume();
-        LayerClient client = App.getLayerClient();
-        if (client == null) return;
-        if (client.isAuthenticated()) {
-            client.connect();
-        } else {
-            client.authenticate();
-        }
-
-        setTitle(mConversation != null);
-
-        // Register for identity changes and update the activity's title as needed
-        mIdentityChangeListener = new IdentityChangeListener();
-        App.getLayerClient().registerEventListener(mIdentityChangeListener);
-    }
-
-    @Override
-    protected void onPause() {
-        // Update the notification position to the latest seen
-        PushNotificationReceiver.getNotifications(this).clear(mConversation);
-
-        App.getLayerClient().unregisterEventListener(mIdentityChangeListener);
-        super.onPause();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mMessagesList != null) {
-            mMessagesList.onDestroy();
-        }
-    }
-
-    public void setTitle(boolean useConversation) {
+    private void setTitleFromConversationTitle(boolean useConversation) {
         if (!useConversation) {
-            setTitle(R.string.title_select_conversation);
+            mActionBar.setTitle(R.string.title_select_conversation);
         } else {
-            setTitle(Util.getConversationItemFormatter().getConversationTitle(App.getLayerClient().getAuthenticatedUser(), mConversation));
+            mActionBar.setTitle(Util.getConversationItemFormatter().getConversationTitle(App.getLayerClient().getAuthenticatedUser(), mConversation));
         }
     }
 
     private void setConversation(Conversation conversation, boolean hideLauncher) {
         mConversation = conversation;
-        mHistoricFetchLayout.setConversation(conversation);
-        mMessagesList.setConversation(conversation);
-        mTypingIndicator.setConversation(conversation);
-        mComposeBar.setConversation(conversation, App.getLayerClient());
+        mConversationViewModel.setConversation(conversation);
 
         // UI state
         if (conversation == null) {
@@ -358,48 +345,41 @@ public class MessagesListActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_details:
-                if (mConversation == null) return true;
-                Intent intent = new Intent(this, ConversationSettingsActivity.class);
-                intent.putExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY, mConversation.getId());
-                startActivity(intent);
-                return true;
+    private void setUiState(UiState state) {
+        if (mState == state) return;
+        mState = state;
+        switch (state) {
+            case ADDRESS:
+                mAddressBar.setVisibility(View.VISIBLE);
+                mAddressBar.setSuggestionsVisibility(View.VISIBLE);
+                mComposeBar.setVisibility(View.GONE);
+                break;
 
-            case R.id.action_sendlogs:
-                LayerClient.sendLogs(App.getLayerClient(), this);
-                return true;
-            case android.R.id.home:
-                // Menu "Navigate Up" acts like hardware back button
-                onBackPressed();
-                return true;
+            case ADDRESS_COMPOSER:
+                mAddressBar.setVisibility(View.VISIBLE);
+                mAddressBar.setSuggestionsVisibility(View.VISIBLE);
+                mComposeBar.setVisibility(View.VISIBLE);
+                break;
+
+            case ADDRESS_CONVERSATION_COMPOSER:
+                mAddressBar.setVisibility(View.VISIBLE);
+                mAddressBar.setSuggestionsVisibility(View.GONE);
+                mComposeBar.setVisibility(View.VISIBLE);
+                break;
+
+            case CONVERSATION_COMPOSER:
+                mAddressBar.setVisibility(View.GONE);
+                mAddressBar.setSuggestionsVisibility(View.GONE);
+                mComposeBar.setVisibility(View.VISIBLE);
+                break;
         }
-
-        return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        mComposeBar.onActivityResult(this, requestCode, resultCode, data);
-        super.onActivityResult(requestCode, resultCode, data);
-    }
+    //=============================================================================================
+    // Inner classes
+    //=============================================================================================
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        mComposeBar.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    private enum UiState {
-        ADDRESS,
-        ADDRESS_COMPOSER,
-        ADDRESS_CONVERSATION_COMPOSER,
-        CONVERSATION_COMPOSER
-    }
-
-    private class IdentityChangeListener implements LayerChangeEventListener.Weak {
+    class IdentityChangeListener implements LayerChangeEventListener.Weak {
         @Override
         public void onChangeEvent(LayerChangeEvent layerChangeEvent) {
             // Don't need to update title if there is no conversation
@@ -411,20 +391,10 @@ public class MessagesListActivity extends AppCompatActivity {
                 if (change.getObjectType().equals(LayerObject.Type.IDENTITY)) {
                     Identity identity = (Identity) change.getObject();
                     if (mConversation.getParticipants().contains(identity)) {
-                        setTitle(true);
+                        setTitleFromConversationTitle(true);
                     }
                 }
             }
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(mMenuResId, menu);
-        return true;
-    }
-
-    protected LayerClient getLayerClient() {
-        return App.getLayerClient();
     }
 }

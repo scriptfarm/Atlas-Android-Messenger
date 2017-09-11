@@ -5,7 +5,7 @@
 
         <variable
             name="viewModel"
-            type="com.layer.ui.message.MessageItemsListViewModel"/>
+            type="com.layer.ui.conversation.ConversationViewModel"/>
     </data>
 
     <LinearLayout
@@ -18,28 +18,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
-        <com.layer.ui.HistoricMessagesFetchLayout
-            android:id="@+id/historic_sync_layout"
+        <com.layer.ui.conversation.ConversationView
+            android:id="@+id/conversation"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1">
-
-            <com.layer.ui.message.MessageItemListView
-                android:id="@+id/messages_list"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:adapter="@{viewModel.messageItemsAdapter}"
-                app:cellFactories="@{viewModel.CellFactories}"
-                app:itemSwipeListener="@{viewModel.itemSwipeListener}"/>
-
-        </com.layer.ui.HistoricMessagesFetchLayout>
-
-        <com.layer.ui.composebar.ComposeBar
-            android:id="@+id/compose_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/messages_compose_bar_hint"
-            android:minHeight="48dp"
-            android:visibility="gone"/>
+            android:layout_height="match_parent"
+            app:conversation="@{viewModel.conversation}"
+            app:layerClient="@{viewModel.layerClient}"
+            app:messageItemsListViewModel="@{viewModel.messageItemsListViewModel}"/>
     </LinearLayout>
 </layout>

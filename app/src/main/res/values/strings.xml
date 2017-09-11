@@ -27,10 +27,6 @@
     <string name="alert_button_unblock">Unblock</string>
     <string name="alert_button_logout">Log Out</string>
 
-    <string name="attachment_menu_camera">Camera</string>
-    <string name="attachment_menu_gallery">Gallery</string>
-    <string name="attachment_menu_location">Location</string>
-
     <string name="toast_group_name_updated">Group name updated</string>
     <string name="toast_failed_to_deauthenticate">Failed to deauthenticate: %1$s</string>
     <string name="toast_copied_to_clipboard">Copied to clipboard</string>
@@ -88,6 +84,4 @@
     <string name="login_password_hint">Password</string>
     <string name="login_dialog_message">Logging In&#8230;</string>
     <string name="settings_message_placeholder">Calculating...</string>
-
-    <string name="messages_compose_bar_hint">Messages</string>
 </resources>
