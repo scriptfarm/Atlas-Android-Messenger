@@ -216,11 +216,11 @@ public class MessagesListActivity extends AppCompatActivity {
     private void setupConversation(Conversation conversation) {
         mConversationView = mActivityMessagesListBinding.conversation;
         mMessageItemsListViewModel = new MessageItemsListViewModel(this, App.getLayerClient(),
-                Util.getImageCacheWrapper(), Util.getDateFormatter(this));
+                Util.getImageCacheWrapper(), Util.getDateFormatter(this), Util.getIdentityFormatter(this));
 
         mConversationViewModel = new ConversationViewModel(getApplicationContext(), App.getLayerClient(),
                 Util.getCellFactories(App.getLayerClient()), Util.getImageCacheWrapper(),
-                Util.getDateFormatter(getApplicationContext()),
+                Util.getDateFormatter(getApplicationContext()), Util.getIdentityFormatter(this),
                 new SwipeableItem.OnItemSwipeListener<Message>() {
                     @Override
                     public void onSwipe(final Message message, int direction) {

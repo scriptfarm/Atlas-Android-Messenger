@@ -18,7 +18,6 @@ import com.layer.sdk.messaging.Conversation;
 import com.layer.ui.adapters.ConversationItemsAdapter;
 import com.layer.ui.conversation.ConversationItemsListView;
 import com.layer.ui.conversation.ConversationItemsListViewModel;
-import com.layer.ui.identity.IdentityFormatterImpl;
 import com.layer.ui.recyclerview.OnItemClickListener;
 import com.layer.ui.util.views.SwipeableItem;
 
@@ -42,7 +41,9 @@ public class ConversationsListActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         mConversationsList = binding.conversationsList;
 
-        mConversationItemsListViewModel = new ConversationItemsListViewModel(this, App.getLayerClient(), Util.getConversationItemFormatter(), Util.getImageCacheWrapper(),new IdentityFormatterImpl());
+        mConversationItemsListViewModel = new ConversationItemsListViewModel(this, App.getLayerClient(),
+                Util.getConversationItemFormatter(), Util.getImageCacheWrapper(),
+                Util.getIdentityFormatter(getApplicationContext()));
         mConversationItemsListViewModel.setItemClickListener(new OnItemClickListener<Conversation>() {
             @Override
             public void onItemClick(Conversation item) {
