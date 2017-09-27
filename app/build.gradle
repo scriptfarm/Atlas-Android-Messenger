@@ -2,13 +2,13 @@ apply plugin: 'com.android.application'
 apply from: "$rootDir/tools/tools.gradle"
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion '25.0.2'
+    compileSdkVersion 26
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         applicationId "com.layer.messenger"
-        minSdkVersion 14
-        targetSdkVersion 24
+        minSdkVersion 15
+        targetSdkVersion 26
         versionCode 67
         versionName "$versionCode"
         testInstrumentationRunner 'com.layer.messenger.testrunner.TestButlerRunner'
@@ -30,6 +30,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    compileOptions {
+        targetCompatibility 1.8
+        sourceCompatibility 1.8
+    }
 }
 
 final versions = rootProject.ext
@@ -38,7 +43,6 @@ dependencies {
     // All flavors
     compile project(':layer-atlas')
 
-    compile "com.google.firebase:firebase-messaging:10.2.0"
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })

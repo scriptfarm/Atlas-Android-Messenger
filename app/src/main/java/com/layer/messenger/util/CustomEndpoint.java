@@ -1,14 +1,13 @@
 package com.layer.messenger.util;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
-import com.layer.messenger.App;
-import com.layer.messenger.util.Log;
 import com.layer.sdk.LayerClient;
 
 import org.json.JSONArray;
@@ -34,29 +33,29 @@ import java.util.Set;
  * This is only useful for enterprise customers with custom endpoints.  Contact support@layer.com
  * for information.
  *
- * @see LayerClient.Options#customEndpoint(String, String, String, String)
+ * @see LayerClient.Options.Builder#customEndpoint(String, String, String)
  */
 public class CustomEndpoint {
     private static Endpoint sEndpoint;
     private static Map<String, Endpoint> sEndpoints;
 
-    public static String getLayerAppId() {
-        Endpoint endpoint = getEndpoint();
+    public static String getLayerAppId(Context context) {
+        Endpoint endpoint = getEndpoint(context);
         return endpoint == null ? null : endpoint.getAppId();
     }
 
-    public static void setLayerClientOptions(LayerClient.Options options) {
-        Endpoint endpoint = getEndpoint();
-        if (endpoint != null) endpoint.setLayerClientOptions(options);
+    public static void setLayerClientOptions(Context context, LayerClient.Options.Builder optionsBuilder) {
+        Endpoint endpoint = getEndpoint(context);
+        if (endpoint != null) endpoint.setLayerClientOptions(optionsBuilder);
     }
 
-    public static boolean hasEndpoints() {
-        Map<String, Endpoint> endpoints = getEndpoints();
+    public static boolean hasEndpoints(Context context) {
+        Map<String, Endpoint> endpoints = getEndpoints(context);
         return endpoints != null && !endpoints.isEmpty();
     }
 
-    public static Spinner createSpinner(Context context) {
-        Set<String> endpointNames = getNames();
+    public static Spinner createSpinner(final Context context) {
+        Set<String> endpointNames = getNames(context);
         if (endpointNames == null || endpointNames.isEmpty()) return null;
 
         List<String> namesList = new ArrayList<String>(endpointNames);
@@ -65,56 +64,53 @@ public class CustomEndpoint {
         Spinner spinner = new Spinner(context);
         spinner.setAdapter(adapter);
 
-        Endpoint endpoint = getEndpoint();
+        Endpoint endpoint = getEndpoint(context);
         if (endpoint != null) {
             int position = namesList.indexOf(endpoint.getName());
             if (position != -1) spinner.setSelection(position);
         }
-        setEndpointName((String) spinner.getSelectedItem());
+        setEndpointName(context, (String) spinner.getSelectedItem());
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                setEndpointName((String) parent.getSelectedItem());
+                setEndpointName(context, (String) parent.getSelectedItem());
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                setEndpointName(null);
+                setEndpointName(context, null);
             }
         });
 
         return spinner;
     }
 
-    private static Set<String> getNames() {
-        Map<String, Endpoint> endpoints = getEndpoints();
+    private static Set<String> getNames(Context context) {
+        Map<String, Endpoint> endpoints = getEndpoints(context);
         return endpoints == null ? null : endpoints.keySet();
     }
 
-    private static void setEndpointName(String name) {
-        App.getInstance().getSharedPreferences("layer_custom_endpoint", Context.MODE_PRIVATE).edit().putString("name", name).commit();
-        Map<String, Endpoint> endpoints = getEndpoints();
+    private static void setEndpointName(@NonNull Context context, String name) {
+        context.getSharedPreferences("layer_custom_endpoint", Context.MODE_PRIVATE).edit().putString("name", name).apply();
+        Map<String, Endpoint> endpoints = getEndpoints(context);
         sEndpoint = (endpoints == null) ? null : endpoints.get(name);
         if (Log.isLoggable(Log.VERBOSE)) Log.v("Setting custom endpoint to: " + sEndpoint);
     }
 
-    public static Endpoint getEndpoint() {
+    public static Endpoint getEndpoint(Context context) {
         if (sEndpoint != null) return sEndpoint;
-        String savedEndpointName = App.getInstance().getSharedPreferences("layer_custom_endpoint", Context.MODE_PRIVATE).getString("name", null);
+        String savedEndpointName = context.getSharedPreferences("layer_custom_endpoint", Context.MODE_PRIVATE).getString("name", null);
         if (savedEndpointName == null) return null;
-        Map<String, Endpoint> endpoints = getEndpoints();
+        Map<String, Endpoint> endpoints = getEndpoints(context);
         sEndpoint = (endpoints == null) ? null : endpoints.get(savedEndpointName);
         return sEndpoint;
     }
 
     @Nullable
-    private static Map<String, Endpoint> getEndpoints() {
+    private static Map<String, Endpoint> getEndpoints(Context context) {
         if (sEndpoints != null) return sEndpoints;
-        sEndpoints = new HashMap<String, Endpoint>();
-
-        // Check for endpoints in resources
-        Context context = App.getInstance().getApplicationContext();
+        sEndpoints = new HashMap<>();
 
         try {
             // Read endpoints from assets
@@ -171,7 +167,6 @@ public class CustomEndpoint {
 
         final String mEndpointConf;
         final String mEndpointCert;
-        final String mEndpointAuth;
         final String mEndpointSync;
         final String mEndpointTelemetry;
 
@@ -193,21 +188,19 @@ public class CustomEndpoint {
             if (endpoint != null) {
                 mEndpointConf = endpoint.getString("conf");
                 mEndpointCert = endpoint.getString("cert");
-                mEndpointAuth = endpoint.getString("auth");
                 mEndpointSync = endpoint.getString("sync");
                 mEndpointTelemetry = endpoint.has("telemetry") ? endpoint.getString("telemetry") : null;
             } else {
                 mEndpointConf = null;
                 mEndpointCert = null;
-                mEndpointAuth = null;
                 mEndpointSync = null;
                 mEndpointTelemetry = null;
             }
         }
 
-        public void setLayerClientOptions(LayerClient.Options options) {
-            if (mEndpointAuth != null) {
-                options.customEndpoint(mEndpointConf, mEndpointCert, mEndpointAuth, mEndpointSync, mEndpointTelemetry);
+        public void setLayerClientOptions(LayerClient.Options.Builder optionsBuilder) {
+            if (mEndpointSync != null) {
+                optionsBuilder.customEndpoint(mEndpointConf, mEndpointCert, mEndpointSync);
             }
         }
 
@@ -233,7 +226,6 @@ public class CustomEndpoint {
                     ", mPlatformToken='" + mPlatformToken + '\'' +
                     ", mEndpointConf='" + mEndpointConf + '\'' +
                     ", mEndpointCert='" + mEndpointCert + '\'' +
-                    ", mEndpointAuth='" + mEndpointAuth + '\'' +
                     ", mEndpointSync='" + mEndpointSync + '\'' +
                     ", mEndpointTelemetry= '" + mEndpointTelemetry + '\'' +
                     '}';

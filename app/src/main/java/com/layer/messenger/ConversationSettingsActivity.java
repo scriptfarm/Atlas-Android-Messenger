@@ -1,11 +1,13 @@
 package com.layer.messenger;
 
 import android.app.AlertDialog;
+import android.arch.lifecycle.Observer;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
@@ -23,21 +25,20 @@ import android.widget.Toast;
 import com.layer.messenger.databinding.ActivityConversationSettingsBinding;
 import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
+import com.layer.sdk.LayerDataObserver;
+import com.layer.sdk.LayerDataRequest;
 import com.layer.sdk.changes.LayerChangeEvent;
-import com.layer.sdk.listeners.LayerChangeEventListener;
-import com.layer.sdk.listeners.LayerPolicyListener;
 import com.layer.sdk.messaging.Conversation;
 import com.layer.sdk.messaging.Identity;
-import com.layer.sdk.policy.Policy;
+import com.layer.sdk.messaging.LayerObject;
 import com.layer.ui.identity.IdentityItemsListView;
 import com.layer.ui.identity.IdentityItemsListViewModel;
 import com.layer.ui.recyclerview.OnItemClickListener;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-public class ConversationSettingsActivity extends AppCompatActivity implements LayerPolicyListener, LayerChangeEventListener {
+public class ConversationSettingsActivity extends AppCompatActivity implements LayerDataObserver {
     private EditText mConversationName;
     private Switch mShowNotifications;
     private IdentityItemsListView mParticipantRecyclerView;
@@ -46,6 +47,9 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
 
     private Conversation mConversation;
     private IdentityItemsListViewModel mItemsListViewModel;
+
+    private LayerClient mLayerClient;
+    private Identity mAuthenticatedUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,16 +65,33 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
         mLeaveButton = binding.leaveButton;
         mAddParticipantsButton = binding.addParticipantButton;
 
+        mLayerClient = ((App) getApplication()).getLayerClient();
+
+        mItemsListViewModel = new IdentityItemsListViewModel(this, mLayerClient,
+                Util.getImageCacheWrapper(((App) getApplication())));
+
+        // Get authenticated user
+        mLayerClient.getAuthenticatedUserLive().observe(this, new Observer<Identity>() {
+            @Override
+            public void onChanged(@Nullable Identity identity) {
+                mAuthenticatedUser = identity;
+                refresh();
+            }
+        });
+
         // Get Conversation from Intent extras
         Uri conversationId = getIntent().getParcelableExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY);
-        mConversation = App.getLayerClient().getConversation(conversationId);
-        if (mConversation == null && !isFinishing()) finish();
 
-        Set<Identity> participants = mConversation.getParticipants();
-        participants.remove(App.getLayerClient().getAuthenticatedUser());
+        mItemsListViewModel = new IdentityItemsListViewModel(this, mLayerClient,
+                Util.getImageCacheWrapper(((App) getApplication())));
 
-        mItemsListViewModel = new IdentityItemsListViewModel(this, App.getLayerClient(), Util.getImageCacheWrapper());
-        mItemsListViewModel.setIdentities(participants);
+        mLayerClient.getLive(conversationId, Conversation.class).observe(this, new Observer<Conversation>() {
+            @Override
+            public void onChanged(@Nullable Conversation layerObject) {
+                mConversation = layerObject;
+                refresh();
+            }
+        });
 
         mItemsListViewModel.setItemClickListener(new OnItemClickListener<Identity>() {
             @Override
@@ -80,6 +101,7 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
                         .setMessage(Util.getIdentityFormatter(getApplicationContext()).getDisplayName(item));
 
                 if (mConversation.getParticipants().size() > 2) {
+                    // TODO Handle null conversations (pending load)
                     builder.setNeutralButton(R.string.alert_button_remove, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -88,26 +110,27 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
                     });
                 }
 
-                final Policy blockPolicy = getBlockPolicy(App.getLayerClient(), item);
-
-                builder.setPositiveButton(blockPolicy == null ? R.string.alert_button_block : R.string.alert_button_unblock,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                if (blockPolicy == null) {
-                                    // Block
-                                    Policy policy = new Policy.Builder(Policy.PolicyType.BLOCK).sentByUserId(item.getUserId()).build();
-                                    App.getLayerClient().addPolicy(policy);
-                                } else {
-                                    App.getLayerClient().removePolicy(blockPolicy);
-                                }
-                            }
-                        }).setNegativeButton(R.string.alert_button_cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                }).show();
+                // TODO Blocking support
+//                final Policy blockPolicy = getBlockPolicy(App.getLayerClient(), item);
+//
+//                builder.setPositiveButton(blockPolicy == null ? R.string.alert_button_block : R.string.alert_button_unblock,
+//                        new DialogInterface.OnClickListener() {
+//                            @Override
+//                            public void onClick(DialogInterface dialog, int which) {
+//                                if (blockPolicy == null) {
+//                                    // Block
+//                                    Policy policy = new Policy.Builder(Policy.PolicyType.BLOCK).sentByUserId(item.getUserId()).build();
+//                                    App.getLayerClient().addPolicy(policy);
+//                                } else {
+//                                    App.getLayerClient().removePolicy(blockPolicy);
+//                                }
+//                            }
+//                        }).setNegativeButton(R.string.alert_button_cancel, new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        dialog.dismiss();
+//                    }
+//                }).show();
             }
 
             @Override
@@ -123,6 +146,7 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE || (event != null && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
                     String title = ((EditText) v).getText().toString().trim();
+                    // TODO Handle null conversations (pending load)
                     Util.getConversationItemFormatter().setMetaDataTitleOnConversation(mConversation, title);
                     Toast.makeText(v.getContext(), R.string.toast_group_name_updated, Toast.LENGTH_SHORT).show();
                     return true;
@@ -134,6 +158,7 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
         mShowNotifications.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // TODO Handle null conversations (pending load)
                 PushNotificationReceiver.getNotifications(ConversationSettingsActivity.this)
                         .setEnabled(mConversation.getId(), isChecked);
             }
@@ -143,7 +168,9 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
             @Override
             public void onClick(View v) {
                 setEnabled(false);
-                mConversation.removeParticipants(App.getLayerClient().getAuthenticatedUser());
+                // TODO Handle null conversations (pending load)
+                // TODO Handle cases where authenticated user is null
+                mConversation.removeParticipants(mAuthenticatedUser);
                 refresh();
                 Intent intent = new Intent(ConversationSettingsActivity.this, ConversationsListActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -164,14 +191,18 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
     @Override
     protected void onResume() {
         super.onResume();
-        App.getLayerClient().registerPolicyListener(this).registerEventListener(this);
+        // TODO Blocking
+//        mLayerClient.registerPolicyListener(this);
+        mLayerClient.registerDataObserver(this);
         setEnabled(true);
         refresh();
     }
 
     @Override
     protected void onPause() {
-        App.getLayerClient().unregisterPolicyListener(this).unregisterEventListener(this);
+        // TODO Blocking
+//        mLayerClient.unregisterPolicyListener(this);
+        mLayerClient.unregisterDataObserver(this);
         super.onPause();
     }
 
@@ -202,7 +233,7 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
                 return true;
 
             case R.id.action_sendlogs:
-                LayerClient.sendLogs(App.getLayerClient(), this);
+                LayerClient.sendLogs(mLayerClient, this);
                 return true;
 
             default:
@@ -240,13 +271,20 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
     }
 
     private void refresh() {
-        if (!App.getLayerClient().isAuthenticated()) return;
+        if (!mLayerClient.isAuthenticated()) return;
+        // TODO This should cause placeholder views to appear
+        if (mConversation == null || mAuthenticatedUser == null) return;
+
+        Set<Identity> participants = mConversation.getParticipants();
+        participants.remove(mAuthenticatedUser);
+
+        mItemsListViewModel.setIdentities(participants);
 
         mConversationName.setText(Util.getConversationItemFormatter().getConversationMetadataTitle(mConversation));
         mShowNotifications.setChecked(PushNotificationReceiver.getNotifications(this).isEnabled(mConversation.getId()));
 
         Set<Identity> participantsMinusMe = new HashSet<>(mConversation.getParticipants());
-        participantsMinusMe.remove(App.getLayerClient().getAuthenticatedUser());
+        participantsMinusMe.remove(mAuthenticatedUser);
 
         if (participantsMinusMe.size() == 0) {
             // I've been removed
@@ -265,24 +303,30 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
         mItemsListViewModel.setIdentities(participantsMinusMe);
     }
 
-    private Policy getBlockPolicy(LayerClient client, Identity identity) {
-        for (Policy policy : client.getPolicies()) {
-            if (policy.getPolicyType() == Policy.PolicyType.BLOCK
-                    && policy.getSentByUserID().equals(identity.getUserId())) {
-                return policy;
-            }
-        }
+    // TODO blocking support
+//    private Policy getBlockPolicy(LayerClient client, Identity identity) {
+//        for (Policy policy : client.getPolicies()) {
+//            if (policy.getPolicyType() == Policy.PolicyType.BLOCK
+//                    && policy.getSentByUserID().equals(identity.getUserId())) {
+//                return policy;
+//            }
+//        }
+//
+//        return null;
+//    }
+//
+//    @Override
+//    public void onPolicyListUpdate(LayerClient layerClient, List<Policy> list, List<Policy> list1) {
+//        refresh();
+//    }
 
-        return null;
-    }
 
     @Override
-    public void onPolicyListUpdate(LayerClient layerClient, List<Policy> list, List<Policy> list1) {
+    public void onDataChanged(LayerChangeEvent event) {
         refresh();
     }
 
     @Override
-    public void onChangeEvent(LayerChangeEvent layerChangeEvent) {
-        refresh();
+    public void onDataRequestCompleted(LayerDataRequest request, LayerObject object) {
     }
 }

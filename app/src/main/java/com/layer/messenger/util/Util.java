@@ -25,9 +25,7 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class Util {
     private static ConversationItemFormatter sConversationItemFormatter;
@@ -47,6 +45,7 @@ public class Util {
         return sConversationItemFormatter;
     }
 
+    // TODO we should remove the dependency on LayerClient
     public static List<CellFactory> getCellFactories(LayerClient layerClient) {
         if (sCellFactories == null || sCellFactories.isEmpty()) {
             sCellFactories = new ArrayList<>();
@@ -77,9 +76,9 @@ public class Util {
      * This sample app implementation uses Picasso, see {@link PicassoImageCacheWrapper}
      * Replace the implementation with whatever Image Caching library you wish to use.
      */
-    public static ImageCacheWrapper getImageCacheWrapper() {
+    public static ImageCacheWrapper getImageCacheWrapper(App app) {
         if (sImageCacheWrapper == null) {
-            sImageCacheWrapper = new PicassoImageCacheWrapper(App.getPicasso());
+            sImageCacheWrapper = new PicassoImageCacheWrapper(app.getPicasso());
         }
         return sImageCacheWrapper;
     }

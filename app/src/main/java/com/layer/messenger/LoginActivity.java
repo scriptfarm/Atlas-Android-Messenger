@@ -13,9 +13,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.layer.messenger.util.LayerAuthenticationProvider;
-import com.layer.messenger.util.CustomEndpoint;
 import com.layer.messenger.util.AuthenticationProvider;
+import com.layer.messenger.util.CustomEndpoint;
+import com.layer.messenger.util.LayerAuthenticationProvider;
 import com.layer.messenger.util.Log;
 
 public class LoginActivity extends AppCompatActivity {
@@ -52,12 +52,10 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         // Optionally add a CustomEndpoint Spinner (not typical)
-        if (App.LAYER_APP_ID == null) {
-            Spinner customEndpoints = CustomEndpoint.createSpinner(this);
-            if (customEndpoints != null) {
-                customEndpoints.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                ((ViewGroup) mPassword.getParent()).addView(customEndpoints);
-            }
+        Spinner customEndpoints = CustomEndpoint.createSpinner(this);
+        if (customEndpoints != null) {
+            customEndpoints.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            ((ViewGroup) mPassword.getParent()).addView(customEndpoints);
         }
     }
 
@@ -78,7 +76,8 @@ public class LoginActivity extends AppCompatActivity {
         final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this);
         progressDialog.setMessage(getResources().getString(R.string.login_dialog_message));
         progressDialog.show();
-        App.authenticate(new LayerAuthenticationProvider.Credentials(App.getLayerAppId(), email, password, null),
+        App app = (App) getApplication();
+        app.authenticate(new LayerAuthenticationProvider.Credentials(app.getLayerAppId(), email, password, null),
                 new AuthenticationProvider.Callback() {
                     @Override
                     public void onSuccess(AuthenticationProvider provider, String userId) {

@@ -17,7 +17,8 @@ import com.layer.ui.util.Util;
 import com.layer.ui.util.imagecache.requesthandlers.MessagePartRequestHandler;
 import com.squareup.picasso.Picasso;
 
-import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * App provides static access to a LayerClient and other Atlas and Messenger context, including
@@ -29,16 +30,12 @@ import java.util.Arrays;
  */
 public class App extends Application {
 
-    // Set your Layer App ID from your Layer Developer Dashboard.
-    public final static String LAYER_APP_ID = null;
-
     public static final String SHARED_PREFS = "MESSENGER_SHARED_PREFS";
     public static final String SHARED_PREFS_KEY_TELEMETRY_ENABLED = "TELEMETRY_ENABLED";
 
-    private static Application sInstance;
-    private static LayerClient sLayerClient;
-    private static AuthenticationProvider sAuthProvider;
-    private static Picasso sPicasso;
+    private LayerClient mLayerClient;
+    private LayerAuthenticationProvider mAuthProvider;
+    private Picasso mPicasso;
 
     //==============================================================================================
     // Application Overrides
@@ -48,13 +45,11 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
-        sInstance = this;
-
         // Enable verbose logging in debug builds
         if (BuildConfig.DEBUG) {
             com.layer.ui.util.Log.setLoggingEnabled(true);
             com.layer.messenger.util.Log.setAlwaysLoggable(true);
-            LayerClient.setLoggingEnabled(this, true);
+            LayerClient.setLoggingEnabled(true);
             LayerClient.setPrivateLoggingEnabled(true);
 
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
@@ -71,14 +66,8 @@ public class App extends Application {
             Log.perf("Application onCreate()");
         }
 
-        // Allow the LayerClient to track app state
-        LayerClient.applicationCreated(this);
-
-        com.layer.messenger.util.Util.init(this, getLayerClient(), getPicasso());
-    }
-
-    public static Application getInstance() {
-        return sInstance;
+        mAuthProvider = new LayerAuthenticationProvider(this);
+        LayerClient.registerAuthenticationChallengeListener(mAuthProvider);
     }
 
 
@@ -93,8 +82,8 @@ public class App extends Application {
      * @param from Activity to route from.
      * @return `true` if the user has been routed to another Activity, or `false` otherwise.
      */
-    public static boolean routeLogin(Activity from) {
-        return getAuthenticationProvider().routeLogin(getLayerClient(), getLayerAppId(), from);
+    public boolean routeLogin(Activity from) {
+        return mAuthProvider.routeLogin(getLayerClient(), getLayerAppId(), from);
     }
 
     /**
@@ -105,15 +94,16 @@ public class App extends Application {
      * @param callback    Callback to receive authentication results.
      */
     @SuppressWarnings("unchecked")
-    public static void authenticate(Object credentials, AuthenticationProvider.Callback callback) {
+    public void authenticate(LayerAuthenticationProvider.Credentials credentials, AuthenticationProvider.Callback callback) {
         LayerClient client = getLayerClient();
         if (client == null) return;
         String layerAppId = getLayerAppId();
         if (layerAppId == null) return;
-        getAuthenticationProvider()
+        mAuthProvider
                 .setCredentials(credentials)
                 .setCallback(callback);
-        client.authenticate();
+        // TODO we shouldn't always request an authentication nonce
+        client.requestAuthenticationNonce();
     }
 
     /**
@@ -121,12 +111,12 @@ public class App extends Application {
      *
      * @param callback Callback to receive deauthentication success and failure.
      */
-    public static void deauthenticate(final Util.DeauthenticationCallback callback) {
+    public void deauthenticate(final Util.DeauthenticationCallback callback) {
         Util.deauthenticate(getLayerClient(), new Util.DeauthenticationCallback() {
             @Override
             @SuppressWarnings("unchecked")
             public void onDeauthenticationSuccess(LayerClient client) {
-                getAuthenticationProvider().setCredentials(null);
+                mAuthProvider.setCredentials(null);
                 callback.onDeauthenticationSuccess(client);
             }
 
@@ -148,10 +138,16 @@ public class App extends Application {
      * unable to create a LayerClient (due to no App ID, etc.). Set the information in assets/LayerConfiguration.json
      * @return New or existing LayerClient, or `null` if a LayerClient could not be constructed.
      */
-    public static LayerClient getLayerClient() {
-        if (sLayerClient == null) {
+    public LayerClient getLayerClient() {
+        if (mLayerClient == null) {
+            String layerAppId = getLayerAppId();
+            if (layerAppId == null) {
+                if (Log.isLoggable(Log.ERROR)) Log.e(getString(R.string.app_id_required));
+                return null;
+            }
+
             boolean telemetryEnabled;
-            SharedPreferences sharedPreferences = sInstance.getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
             if (sharedPreferences.contains(SHARED_PREFS_KEY_TELEMETRY_ENABLED)) {
                 telemetryEnabled = sharedPreferences.getBoolean(SHARED_PREFS_KEY_TELEMETRY_ENABLED, true);
             } else {
@@ -159,65 +155,53 @@ public class App extends Application {
                 telemetryEnabled = true;
             }
 
+            Set<String> autoDownloadMimeTypes = new HashSet<>(3);
+            autoDownloadMimeTypes.add(TextCellFactory.MIME_TYPE);
+            autoDownloadMimeTypes.add(ThreePartImageUtils.MIME_TYPE_INFO);
+            autoDownloadMimeTypes.add(ThreePartImageUtils.MIME_TYPE_PREVIEW);
+
             // Custom options for constructing a LayerClient
-            LayerClient.Options options = new LayerClient.Options()
+            // TODO Telemetry support
+            LayerClient.Options.Builder optionsBuilder = new LayerClient.Options.Builder()
 
                     /* Fetch the minimum amount per conversation when first authenticated */
                     .historicSyncPolicy(LayerClient.Options.HistoricSyncPolicy.FROM_LAST_MESSAGE)
 
                     /* Automatically download text and ThreePartImage info/preview */
-                    .autoDownloadMimeTypes(Arrays.asList(
-                            TextCellFactory.MIME_TYPE,
-                            ThreePartImageUtils.MIME_TYPE_INFO,
-                            ThreePartImageUtils.MIME_TYPE_PREVIEW))
-                    .setTelemetryEnabled(telemetryEnabled);
+                    .autoDownloadMimeTypes(autoDownloadMimeTypes)
 
-            sLayerClient = generateLayerClient(sInstance, options);
+                    .runAgainstStandalone(true)
 
-            // Unable to generate Layer Client (no App ID, etc.)
-            if (sLayerClient == null) return null;
+                    .useFirebaseCloudMessaging(true, "565052870572");
+
+
+            CustomEndpoint.setLayerClientOptions(this, optionsBuilder);
+
+            mLayerClient = LayerClient.newInstance(layerAppId, optionsBuilder.build());
+
+            com.layer.messenger.util.Util.init(this, mLayerClient, getPicasso());
 
             /* Register AuthenticationProvider for handling authentication challenges */
-            sLayerClient.registerAuthenticationListener(getAuthenticationProvider());
+            mLayerClient.registerAuthenticationListener(mAuthProvider);
+
+            /* Connect the LayerClient to Layer servers */
+            mLayerClient.connect();
         }
-        return sLayerClient;
+        return mLayerClient;
     }
 
-    public static AuthenticationProvider getAuthenticationProvider() {
-        if (sAuthProvider == null) {
-            sAuthProvider = generateAuthenticationProvider(sInstance);
-
-            // If we have cached credentials, try authenticating with Layer
-            LayerClient layerClient = getLayerClient();
-            if (layerClient != null && sAuthProvider.hasCredentials()) layerClient.authenticate();
-        }
-        return sAuthProvider;
-    }
-
-    public static Picasso getPicasso() {
-        if (sPicasso == null) {
+    public Picasso getPicasso() {
+        if (mPicasso == null) {
             // Picasso with custom RequestHandler for loading from Layer MessageParts.
-            sPicasso = new Picasso.Builder(sInstance)
+            mPicasso = new Picasso.Builder(this)
                     .addRequestHandler(new MessagePartRequestHandler(getLayerClient()))
                     .build();
         }
-        return sPicasso;
+        return mPicasso;
     }
 
-    public static String getLayerAppId() {
-        return (LAYER_APP_ID != null) ? LAYER_APP_ID : CustomEndpoint.getLayerAppId();
-    }
-
-    private static LayerClient generateLayerClient(Context context, LayerClient.Options options) {
-        String layerAppId = getLayerAppId();
-        LayerClient.setLoggingEnabled(context, true);
-        if (layerAppId == null) {
-            if (Log.isLoggable(Log.ERROR)) Log.e(context.getString(R.string.app_id_required));
-            return null;
-        }
-        options.useFirebaseCloudMessaging(true);
-        CustomEndpoint.setLayerClientOptions(options);
-        return LayerClient.newInstance(context, layerAppId, options);
+    public String getLayerAppId() {
+        return CustomEndpoint.getLayerAppId(this);
     }
 
     private static AuthenticationProvider generateAuthenticationProvider(Context context) {

@@ -24,15 +24,18 @@ import com.layer.ui.util.views.SwipeableItem;
 public class ConversationsListActivity extends AppCompatActivity {
     private ConversationItemsListView mConversationsList;
     private ConversationItemsListViewModel mConversationItemsListViewModel;
+    private LayerClient mLayerClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (App.routeLogin(this)) {
+        if (((App) getApplication()).routeLogin(this)) {
             if (!isFinishing()) finish();
             return;
         }
+
+        mLayerClient = ((App) getApplication()).getLayerClient();
 
         int menuTitleResId = R.string.title_conversations_list;
         setTitle(menuTitleResId);
@@ -41,8 +44,8 @@ public class ConversationsListActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         mConversationsList = binding.conversationsList;
 
-        mConversationItemsListViewModel = new ConversationItemsListViewModel(this, App.getLayerClient(),
-                Util.getConversationItemFormatter(), Util.getImageCacheWrapper());
+        mConversationItemsListViewModel = new ConversationItemsListViewModel(this, mLayerClient,
+                Util.getConversationItemFormatter(), Util.getImageCacheWrapper((App) getApplication()));
         mConversationItemsListViewModel.setItemClickListener(new OnItemClickListener<Conversation>() {
             @Override
             public void onItemClick(Conversation item) {
@@ -104,18 +107,6 @@ public class ConversationsListActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        LayerClient client = App.getLayerClient();
-        if (client == null) return;
-        if (client.isAuthenticated()) {
-            client.connect();
-        } else {
-            client.authenticate();
-        }
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
         if (mConversationsList != null) {
@@ -142,7 +133,7 @@ public class ConversationsListActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_sendlogs:
-                LayerClient.sendLogs(App.getLayerClient(), this);
+                LayerClient.sendLogs(mLayerClient, this);
                 return true;
 
             default:

@@ -1,11 +1,14 @@
 package com.layer.messenger;
 
 import android.app.AlertDialog;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
@@ -20,12 +23,13 @@ import android.widget.TextView;
 import com.layer.messenger.databinding.ActivityMessagesListBinding;
 import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
+import com.layer.sdk.LayerDataObserver;
+import com.layer.sdk.LayerDataRequest;
 import com.layer.sdk.changes.LayerChange;
 import com.layer.sdk.changes.LayerChangeEvent;
-import com.layer.sdk.exceptions.LayerConversationException;
-import com.layer.sdk.listeners.LayerChangeEventListener;
 import com.layer.sdk.messaging.Conversation;
 import com.layer.sdk.messaging.ConversationOptions;
+import com.layer.sdk.messaging.ConversationType;
 import com.layer.sdk.messaging.Identity;
 import com.layer.sdk.messaging.LayerObject;
 import com.layer.sdk.messaging.Message;
@@ -38,6 +42,7 @@ import com.layer.ui.message.messagetypes.location.LocationSender;
 import com.layer.ui.message.messagetypes.text.TextSender;
 import com.layer.ui.message.messagetypes.threepartimage.CameraSender;
 import com.layer.ui.message.messagetypes.threepartimage.GallerySender;
+import com.layer.ui.util.imagecache.ImageCacheWrapper;
 import com.layer.ui.util.views.SwipeableItem;
 
 import java.util.HashSet;
@@ -56,6 +61,8 @@ public class MessagesListActivity extends AppCompatActivity {
 
     private ActivityMessagesListBinding mActivityMessagesListBinding;
     private ActionBar mActionBar;
+
+    private LayerClient mLayerClient;
 
     private enum UiState {
         ADDRESS,
@@ -77,7 +84,9 @@ public class MessagesListActivity extends AppCompatActivity {
         mActionBar.setDisplayHomeAsUpEnabled(true);
         mActionBar.setTitle(R.string.title_select_conversation);
 
-        if (App.routeLogin(this)) {
+        mLayerClient = ((App) getApplication()).getLayerClient();
+
+        if (((App) getApplication()).routeLogin(this)) {
             if (!isFinishing()) finish();
             return;
         }
@@ -85,37 +94,30 @@ public class MessagesListActivity extends AppCompatActivity {
         mActivityMessagesListBinding = DataBindingUtil.setContentView(this, R.layout.activity_messages_list);
 
         setupAddressBar();
-        Conversation conversation = getConversationFromIntent();
         setupComposeBar();
+        Conversation conversation = getConversationFromIntent();
         setupConversation(conversation);
     }
 
     @Override
     protected void onResume() {
         // Clear any notifications for this conversation
-        PushNotificationReceiver.getNotifications(this).clear(mConversation);
+        PushNotificationReceiver.getNotifications(this).clear(mLayerClient, mConversation);
         super.onResume();
-        LayerClient client = App.getLayerClient();
-        if (client == null) return;
-        if (client.isAuthenticated()) {
-            client.connect();
-        } else {
-            client.authenticate();
-        }
 
         setTitleFromConversationTitle(mConversation != null);
 
         // Register for identity changes and update the activity's title as needed
         mIdentityChangeListener = new IdentityChangeListener();
-        App.getLayerClient().registerEventListener(mIdentityChangeListener);
+        mLayerClient.registerDataObserver(mIdentityChangeListener);
     }
 
     @Override
     protected void onPause() {
         // Update the notification position to the latest seen
-        PushNotificationReceiver.getNotifications(this).clear(mConversation);
+        PushNotificationReceiver.getNotifications(this).clear(mLayerClient, mConversation);
 
-        App.getLayerClient().unregisterEventListener(mIdentityChangeListener);
+        mLayerClient.unregisterDataObserver(mIdentityChangeListener);
         super.onPause();
     }
 
@@ -138,7 +140,7 @@ public class MessagesListActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_sendlogs:
-                LayerClient.sendLogs(App.getLayerClient(), this);
+                LayerClient.sendLogs(mLayerClient, this);
                 return true;
             case android.R.id.home:
                 // Menu "Navigate Up" acts like hardware back button
@@ -173,34 +175,35 @@ public class MessagesListActivity extends AppCompatActivity {
 
     // Get or create Conversation from Intent extras
     private Conversation getConversationFromIntent() {
-        Conversation conversation = null;
         Intent intent = getIntent();
         if (intent != null) {
             if (intent.hasExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY)) {
                 Uri conversationId = intent.getParcelableExtra(PushNotificationReceiver.LAYER_CONVERSATION_KEY);
-                conversation = App.getLayerClient().getConversation(conversationId);
-            } else if (intent.hasExtra("participantIds")) {
-                String[] participantIds = intent.getStringArrayExtra("participantIds");
-                try {
-                    conversation = App.getLayerClient().newConversationWithUserIds(new ConversationOptions().distinct(true), participantIds);
-                } catch (LayerConversationException e) {
-                    conversation = e.getConversation();
-                }
+
+                LiveData<Conversation> conversationLiveData = mLayerClient.getLive(conversationId, Conversation.class);
+                conversationLiveData.observe(this, new Observer<Conversation>() {
+                    @Override
+                    public void onChanged(@Nullable Conversation layerObject) {
+                        setupConversation(layerObject);
+                        setTitleFromConversationTitle(layerObject != null);
+                    }
+                });
+                return conversationLiveData.getValue();
             }
         }
 
-        return conversation;
+        return null;
     }
 
     private void setupComposeBar() {
         mComposeBar = mActivityMessagesListBinding.conversation.getComposeBar();
-        mComposeBar.setTextSender(new TextSender(this, App.getLayerClient()));
+        mComposeBar.setTextSender(new TextSender(this, mLayerClient));
         mComposeBar.addAttachmentSendersToDefaultAttachmentButton(
                 new CameraSender(R.string.attachment_menu_camera,
-                        R.drawable.ic_photo_camera_white_24dp, this, App.getLayerClient(),
+                        R.drawable.ic_photo_camera_white_24dp, this, mLayerClient,
                         getApplicationContext().getPackageName() + ".file_provider"),
-                new GallerySender(R.string.attachment_menu_gallery, R.drawable.ic_photo_white_24dp, this, App.getLayerClient()),
-                new LocationSender(R.string.attachment_menu_location, R.drawable.ic_place_white_24dp, this, App.getLayerClient()));
+                new GallerySender(R.string.attachment_menu_gallery, R.drawable.ic_photo_white_24dp, this, mLayerClient),
+                new LocationSender(R.string.attachment_menu_location, R.drawable.ic_place_white_24dp, this, mLayerClient));
 
         mComposeBar.setOnMessageEditTextFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -215,11 +218,12 @@ public class MessagesListActivity extends AppCompatActivity {
 
     private void setupConversation(Conversation conversation) {
         mConversationView = mActivityMessagesListBinding.conversation;
-        mMessageItemsListViewModel = new MessageItemsListViewModel(this, App.getLayerClient(),
-                Util.getImageCacheWrapper(), Util.getDateFormatter(this), Util.getIdentityFormatter(this));
+        ImageCacheWrapper imageCacheWrapper = Util.getImageCacheWrapper((App) getApplication());
+        mMessageItemsListViewModel = new MessageItemsListViewModel(this, mLayerClient,
+                imageCacheWrapper, Util.getDateFormatter(this), Util.getIdentityFormatter(this));
 
-        mConversationViewModel = new ConversationViewModel(getApplicationContext(), App.getLayerClient(),
-                Util.getCellFactories(App.getLayerClient()), Util.getImageCacheWrapper(),
+        mConversationViewModel = new ConversationViewModel(getApplicationContext(), mLayerClient,
+                Util.getCellFactories(mLayerClient), imageCacheWrapper,
                 Util.getDateFormatter(getApplicationContext()), Util.getIdentityFormatter(this),
                 new SwipeableItem.OnItemSwipeListener<Message>() {
                     @Override
@@ -260,8 +264,9 @@ public class MessagesListActivity extends AppCompatActivity {
     }
 
     private void setupAddressBar() {
+        ImageCacheWrapper imageCacheWrapper = Util.getImageCacheWrapper(((App) getApplication()));
         mAddressBar = mActivityMessagesListBinding.conversationLauncher
-                .init(App.getLayerClient(), Util.getImageCacheWrapper())
+                .init(mLayerClient, imageCacheWrapper)
                 .setOnConversationClickListener(new AddressBar.OnConversationClickListener() {
                     @Override
                     public void onConversationClick(AddressBar addressBar, Conversation conversation) {
@@ -276,11 +281,9 @@ public class MessagesListActivity extends AppCompatActivity {
                             setConversation(null, false);
                             return;
                         }
-                        try {
-                            setConversation(App.getLayerClient().newConversation(new ConversationOptions().distinct(true), new HashSet<>(participants)), false);
-                        } catch (LayerConversationException e) {
-                            setConversation(e.getConversation(), false);
-                        }
+                        setConversation(mLayerClient.newConversation(new ConversationOptions().type(
+                                ConversationType.DIRECT_MESSAGE_CONVERSATION),
+                                new HashSet<>(participants)), false);
                     }
                 })
                 .addTextChangedListener(new TextWatcher() {
@@ -318,7 +321,8 @@ public class MessagesListActivity extends AppCompatActivity {
         if (!useConversation) {
             mActionBar.setTitle(R.string.title_select_conversation);
         } else {
-            mActionBar.setTitle(Util.getConversationItemFormatter().getConversationTitle(App.getLayerClient().getAuthenticatedUser(), mConversation));
+            // TODO Observe authenticated user changes
+            mActionBar.setTitle(Util.getConversationItemFormatter().getConversationTitle(mLayerClient.getAuthenticatedUserLive().getValue(), mConversation));
         }
     }
 
@@ -379,15 +383,16 @@ public class MessagesListActivity extends AppCompatActivity {
     // Inner classes
     //=============================================================================================
 
-    class IdentityChangeListener implements LayerChangeEventListener.Weak {
+    class IdentityChangeListener implements LayerDataObserver.Weak {
+
         @Override
-        public void onChangeEvent(LayerChangeEvent layerChangeEvent) {
+        public void onDataChanged(LayerChangeEvent event) {
             // Don't need to update title if there is no conversation
             if (mConversation == null) {
                 return;
             }
 
-            for (LayerChange change : layerChangeEvent.getChanges()) {
+            for (LayerChange change : event.getChanges()) {
                 if (change.getObjectType().equals(LayerObject.Type.IDENTITY)) {
                     Identity identity = (Identity) change.getObject();
                     if (mConversation.getParticipants().contains(identity)) {
@@ -395,6 +400,11 @@ public class MessagesListActivity extends AppCompatActivity {
                     }
                 }
             }
+        }
+
+        @Override
+        public void onDataRequestCompleted(LayerDataRequest request, LayerObject object) {
+
         }
     }
 }

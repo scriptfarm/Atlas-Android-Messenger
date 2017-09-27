@@ -2,3 +2,5 @@ include ':app'
 
 include ':layer-atlas'
 project(':layer-atlas').projectDir = new File('Atlas-Android/layer-atlas')
+include ':sdk'
+project(':sdk').projectDir = new File('Atlas-Android/layer-recon-android-sdk/sdk')

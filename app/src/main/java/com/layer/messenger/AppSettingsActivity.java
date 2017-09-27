@@ -1,14 +1,15 @@
 package com.layer.messenger;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
-import android.text.TextUtils;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -19,29 +20,30 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.layer.messenger.util.Log;
+import com.layer.sdk.LayerClient;
+import com.layer.sdk.LayerDataObserver;
+import com.layer.sdk.LayerDataRequest;
+import com.layer.sdk.LayerQueryRequest;
+import com.layer.sdk.authentication.AuthenticationListener;
+import com.layer.sdk.changes.LayerChangeEvent;
+import com.layer.sdk.messaging.Conversation;
+import com.layer.sdk.messaging.Identity;
+import com.layer.sdk.messaging.LayerObject;
+import com.layer.sdk.messaging.Presence;
+import com.layer.sdk.query.Query;
 import com.layer.ui.avatar.AvatarView;
 import com.layer.ui.avatar.AvatarViewModelImpl;
 import com.layer.ui.identity.IdentityFormatterImpl;
 import com.layer.ui.presence.PresenceView;
 import com.layer.ui.util.Util;
-import com.layer.messenger.util.ConversationSettingsTaskLoader;
-import com.layer.messenger.util.ConversationSettingsTaskLoader.Results;
-
-import com.layer.messenger.util.Log;
-import com.layer.sdk.LayerClient;
-import com.layer.sdk.changes.LayerChangeEvent;
-import com.layer.sdk.exceptions.LayerException;
-import com.layer.sdk.listeners.LayerAuthenticationListener;
-import com.layer.sdk.listeners.LayerChangeEventListener;
-import com.layer.sdk.listeners.LayerConnectionListener;
-import com.layer.sdk.messaging.Identity;
-import com.layer.sdk.messaging.Presence;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class AppSettingsActivity extends BaseActivity implements LayerConnectionListener, LayerAuthenticationListener, LayerChangeEventListener, View.OnLongClickListener, AdapterView.OnItemSelectedListener,  LoaderManager.LoaderCallbacks<Results> {
+public class AppSettingsActivity extends BaseActivity implements AuthenticationListener,
+        LayerDataObserver, View.OnLongClickListener, AdapterView.OnItemSelectedListener {
     /* Account */
     private AvatarView mAvatarView;
     private TextView mUserName;
@@ -75,6 +77,8 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
     private TextView mAutoDownloadMimeTypes;
     private PresenceView mPresenceView;
 
+    private Identity mAuthenticatedUser;
+
     public AppSettingsActivity() {
         super(R.layout.activity_app_settings, R.menu.menu_settings, R.string.title_settings, true);
     }
@@ -105,9 +109,7 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         mDiskAllowance = (TextView) findViewById(R.id.disk_allowance);
         mAutoDownloadMimeTypes = (TextView) findViewById(R.id.auto_download_mime_types);
 
-        mAvatarView.init(new AvatarViewModelImpl(com.layer.messenger.util.Util.getImageCacheWrapper()), new IdentityFormatterImpl(getApplicationContext()));
-
-        getSupportLoaderManager().initLoader(R.id.setting_loader_id, null, this);
+        mAvatarView.init(new AvatarViewModelImpl(com.layer.messenger.util.Util.getImageCacheWrapper((App) getApplication())), new IdentityFormatterImpl(getApplicationContext()));
 
         // Long-click copy-to-clipboard
         mUserName.setOnLongClickListener(this);
@@ -147,7 +149,8 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
                                 progressDialog.setMessage(getResources().getString(R.string.alert_dialog_logout));
                                 progressDialog.setCancelable(false);
                                 progressDialog.show();
-                                App.deauthenticate(new Util.DeauthenticationCallback() {
+                                App app = ((App) getApplication());
+                                app.deauthenticate(new Util.DeauthenticationCallback() {
                                     @Override
                                     public void onDeauthenticationSuccess(LayerClient client) {
                                         if (Log.isPerfLoggable()) {
@@ -159,7 +162,8 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
                                         }
                                         progressDialog.dismiss();
                                         setEnabled(true);
-                                        App.routeLogin(AppSettingsActivity.this);
+                                        App app = ((App) getApplication());
+                                        app.routeLogin(AppSettingsActivity.this);
                                     }
 
                                     @Override
@@ -216,42 +220,43 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         mVerboseLogging.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                LayerClient.setLoggingEnabled(AppSettingsActivity.this, isChecked);
+                LayerClient.setLoggingEnabled(isChecked);
                 com.layer.ui.util.Log.setLoggingEnabled(isChecked);
                 Log.setAlwaysLoggable(isChecked);
+            }
+        });
+
+        // Load conversation count
+        LayerClient layerClient = ((App) getApplication()).getLayerClient();
+        LiveData<LayerQueryRequest<?>> conversationsLive = layerClient.executeQueryForObjectsLive(
+                Query.builder(Conversation.class).build());
+        conversationsLive.observe(this, new ConversationQueryObserver());
+
+        // Load authenticated user
+        LiveData<Identity> authenticatedUserLive = layerClient.getAuthenticatedUserLive();
+        authenticatedUserLive.observe(this, new Observer<Identity>() {
+            @Override
+            public void onChanged(@Nullable Identity identity) {
+                mAuthenticatedUser = identity;
+                refresh();
             }
         });
     }
 
     @Override
-    public Loader<Results> onCreateLoader(int id, Bundle args) {
-        return new ConversationSettingsTaskLoader(getApplicationContext());
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Results> loader, Results data) {
-        setUpConversationCount(data);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Results> loader) {}
-
-    @Override
     protected void onResume() {
         super.onResume();
-        getLayerClient()
-                .registerAuthenticationListener(this)
-                .registerConnectionListener(this)
-                .registerEventListener(this);
+        getLayerClient().registerAuthenticationListener(this);
+        getLayerClient().registerDataObserver(this);
+//                .registerConnectionListener(this);
         refresh();
     }
 
     @Override
     protected void onPause() {
-        getLayerClient()
-                .unregisterAuthenticationListener(this)
-                .unregisterConnectionListener(this)
-                .unregisterEventListener(this);
+        getLayerClient().unregisterAuthenticationListener(this);
+        getLayerClient().unregisterDataObserver(this);
+//                .unregisterConnectionListener(this)
         super.onPause();
     }
 
@@ -270,20 +275,21 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         if (!getLayerClient().isAuthenticated()) return;
 
         /* Account */
-        Identity currentUser = getLayerClient().getAuthenticatedUser();
-        mAvatarView.setParticipants(currentUser);
-        mPresenceView.setParticipants(currentUser);
-        if (currentUser != null) {
-            mUserName.setText(Util.getDisplayName(currentUser));
+        mAvatarView.setParticipants(mAuthenticatedUser);
+        mPresenceView.setParticipants(mAuthenticatedUser);
+        if (mAuthenticatedUser != null) {
+            mUserName.setText(Util.getDisplayName(mAuthenticatedUser));
         } else {
             mUserName.setText(null);
         }
-        mUserState.setText(getLayerClient().isConnected() ? R.string.settings_content_connected : R.string.settings_content_disconnected);
-        Presence.PresenceStatus currentStatus = getLayerClient().getPresenceStatus();
-        if (currentStatus != null) {
-            int spinnerPosition = mPresenceSpinnerDataAdapter.getPosition(currentStatus.toString());
-            mPresenceSpinner.setSelection(spinnerPosition);
-        }
+        // TODO connectivity visibility
+//        mUserState.setText(getLayerClient().isConnected() ? R.string.settings_content_connected : R.string.settings_content_disconnected);
+        // TODO presence support
+//        Presence.PresenceStatus currentStatus = getLayerClient().getPresenceStatus();
+//        if (currentStatus != null) {
+//            int spinnerPosition = mPresenceSpinnerDataAdapter.getPosition(currentStatus.toString());
+//            mPresenceSpinner.setSelection(spinnerPosition);
+//        }
 
         /* Notifications */
         mShowNotifications.setChecked(PushNotificationReceiver.getNotifications(this).isEnabled());
@@ -302,28 +308,22 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
         mLayerVersion.setText(LayerClient.getVersion());
         mAndroidVersion.setText(getString(R.string.settings_content_android_version, Build.VERSION.RELEASE, Build.VERSION.SDK_INT));
 
-        if (currentUser != null) {
-            mUserId.setText(currentUser.getUserId());
+        if (mAuthenticatedUser != null) {
+            mUserId.setText(mAuthenticatedUser.getUserId());
         } else {
             mUserId.setText(R.string.settings_not_authenticated);
         }
 
         /* Rich Content */
-        mDiskUtilization.setText(readableByteFormat(getLayerClient().getDiskUtilization()));
-        long allowance = getLayerClient().getDiskCapacity();
-        if (allowance == 0) {
-            mDiskAllowance.setText(R.string.settings_content_disk_unlimited);
-        } else {
-            mDiskAllowance.setText(readableByteFormat(allowance));
-        }
-        mAutoDownloadMimeTypes.setText(TextUtils.join("\n", getLayerClient().getAutoDownloadMimeTypes()));
-    }
-
-    private void setUpConversationCount(Results results) {
-
-        mConversationCount.setText(String.format("%d", results.getConversationCount()));
-        mMessageCount.setText(String.format("%d", results.getTotalMessages()));
-        mUnreadMessageCount.setText(String.format("%d", results.getTotalUnreadMessages()));
+        // TODO Disk usage accessors and auto download mime type accessors
+//        mDiskUtilization.setText(readableByteFormat(getLayerClient().getDiskUtilization()));
+//        long allowance = getLayerClient().getDiskCapacity();
+//        if (allowance == 0) {
+//            mDiskAllowance.setText(R.string.settings_content_disk_unlimited);
+//        } else {
+//            mDiskAllowance.setText(readableByteFormat(allowance));
+//        }
+//        mAutoDownloadMimeTypes.setText(TextUtils.join("\n", getLayerClient().getAutoDownloadMimeTypes()));
     }
 
     private String readableByteFormat(long bytes) {
@@ -356,38 +356,39 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
     }
 
     @Override
-    public void onDeauthenticated(LayerClient layerClient) {
+    public void onDeauthenticated(LayerClient client, String userId) {
         refresh();
     }
 
     @Override
-    public void onAuthenticationChallenge(LayerClient layerClient, String s) {
+    public void onAuthenticationError(LayerClient client, Exception exception) {
 
     }
 
-    @Override
-    public void onAuthenticationError(LayerClient layerClient, LayerException e) {
+    // TODO Connection listener?
+//    @Override
+//    public void onConnectionConnected(LayerClient layerClient) {
+//        refresh();
+//    }
+//
+//    @Override
+//    public void onConnectionDisconnected(LayerClient layerClient) {
+//        refresh();
+//    }
+//
+//    @Override
+//    public void onConnectionError(LayerClient layerClient, LayerException e) {
+//
+//    }
 
-    }
 
     @Override
-    public void onConnectionConnected(LayerClient layerClient) {
+    public void onDataChanged(LayerChangeEvent event) {
         refresh();
     }
 
     @Override
-    public void onConnectionDisconnected(LayerClient layerClient) {
-        refresh();
-    }
-
-    @Override
-    public void onConnectionError(LayerClient layerClient, LayerException e) {
-
-    }
-
-    @Override
-    public void onChangeEvent(LayerChangeEvent layerChangeEvent) {
-        refresh();
+    public void onDataRequestCompleted(LayerDataRequest request, LayerObject object) {
     }
 
     @Override
@@ -406,9 +407,10 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
 
         String newSelection = mPresenceSpinnerDataAdapter.getItem(position).toString();
         Presence.PresenceStatus newStatus = Presence.PresenceStatus.valueOf(newSelection);
-        if (getLayerClient().isAuthenticated()) {
-            getLayerClient().setPresenceStatus(newStatus);
-        }
+        // TODO presence support
+//        if (getLayerClient().isAuthenticated()) {
+//            getLayerClient().setPresenceStatus(newStatus);
+//        }
 
         // Local changes don't raise change notifications. So, refresh manually
         mPresenceView.invalidate();
@@ -416,5 +418,28 @@ public class AppSettingsActivity extends BaseActivity implements LayerConnection
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
+    }
+
+    private class ConversationQueryObserver implements Observer<LayerQueryRequest<?>> {
+
+        // Explicitly suppressing default locale warning since those strings are user visible
+        @SuppressLint("DefaultLocale")
+        @Override
+        public void onChanged(@Nullable LayerQueryRequest<?> layerQueryRequest) {
+            if (layerQueryRequest == null || layerQueryRequest.getRequestStatus() != LayerDataRequest.RequestStatus.AVAILABLE) {
+                return;
+            }
+            List<Conversation> conversations = (List<Conversation>) layerQueryRequest.getResults();
+            int totalMessages = 0;
+            int totalUnread = 0;
+            for (Conversation conversation : conversations) {
+                totalMessages += conversation.getTotalMessageCount();
+                totalUnread += conversation.getTotalUnreadMessageCount();
+            }
+
+            mConversationCount.setText(String.format("%d", conversations.size()));
+            mMessageCount.setText(String.format("%d", totalMessages));
+            mUnreadMessageCount.setText(String.format("%d", totalUnread));
+        }
     }
 }
