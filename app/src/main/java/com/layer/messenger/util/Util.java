@@ -31,7 +31,7 @@ import java.util.Set;
 
 public class Util {
     private static ConversationItemFormatter sConversationItemFormatter;
-    private static List<CellFactory> sCellFactories;
+    private static List<CellFactory<?,?>> sCellFactories;
     private static ImageCacheWrapper sImageCacheWrapper;
     private static IdentityFormatter sIdentityFormatter;
     private static DateFormatter sDateFormatter;
@@ -47,7 +47,7 @@ public class Util {
         return sConversationItemFormatter;
     }
 
-    public static List<CellFactory> getCellFactories(LayerClient layerClient) {
+    public static List<CellFactory<?,?>> getCellFactories(LayerClient layerClient) {
         if (sCellFactories == null || sCellFactories.isEmpty()) {
             sCellFactories = new ArrayList<>();
             sCellFactories.add(new TextCellFactory());
