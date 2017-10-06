@@ -91,9 +91,9 @@ public class Util {
         return sDateFormatter;
     }
 
-    public static IdentityFormatter getIdentityFormatter() {
+    public static IdentityFormatter getIdentityFormatter(Context context) {
         if (sIdentityFormatter == null) {
-            sIdentityFormatter = new IdentityFormatterImpl();
+            sIdentityFormatter = new IdentityFormatterImpl(context);
         }
         return sIdentityFormatter;
     }

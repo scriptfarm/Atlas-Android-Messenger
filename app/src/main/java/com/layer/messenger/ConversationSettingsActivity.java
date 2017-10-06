@@ -69,7 +69,7 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
         Set<Identity> participants = mConversation.getParticipants();
         participants.remove(App.getLayerClient().getAuthenticatedUser());
 
-        mItemsListViewModel = new IdentityItemsListViewModel(this, App.getLayerClient(), Util.getImageCacheWrapper(), Util.getDateFormatter(this), Util.getIdentityFormatter());
+        mItemsListViewModel = new IdentityItemsListViewModel(this, App.getLayerClient(), Util.getImageCacheWrapper());
         mItemsListViewModel.setIdentities(participants);
 
         mItemsListViewModel.setItemClickListener(new OnItemClickListener<Identity>() {
@@ -77,7 +77,7 @@ public class ConversationSettingsActivity extends AppCompatActivity implements L
             public void onItemClick(final Identity item) {
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(ConversationSettingsActivity.this)
-                        .setMessage(Util.getIdentityFormatter().getDisplayName(item));
+                        .setMessage(Util.getIdentityFormatter(getApplicationContext()).getDisplayName(item));
 
                 if (mConversation.getParticipants().size() > 2) {
                     builder.setNeutralButton(R.string.alert_button_remove, new DialogInterface.OnClickListener() {
