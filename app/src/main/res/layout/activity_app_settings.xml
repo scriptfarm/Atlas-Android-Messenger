@@ -40,8 +40,8 @@
                     android:layout_gravity="center_vertical" />
 
                 <com.layer.ui.presence.PresenceView
-                    android:layout_width="@dimen/layer_ui_avatar_presence_diameter"
-                    android:layout_height="@dimen/layer_ui_avatar_presence_diameter"
+                    android:layout_width="@dimen/layer_ui_avatar_presence_height"
+                    android:layout_height="@dimen/layer_ui_avatar_presence_height"
                     android:layout_gravity="bottom|right"
                     android:id="@+id/presence" />
 

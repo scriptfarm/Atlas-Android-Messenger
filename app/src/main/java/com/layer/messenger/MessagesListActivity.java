@@ -318,7 +318,8 @@ public class MessagesListActivity extends AppCompatActivity {
         if (!useConversation) {
             mActionBar.setTitle(R.string.title_select_conversation);
         } else {
-            mActionBar.setTitle(Util.getConversationItemFormatter().getConversationTitle(App.getLayerClient().getAuthenticatedUser(), mConversation));
+            mActionBar.setTitle(Util.getConversationItemFormatter().getConversationTitle(
+                    App.getLayerClient().getAuthenticatedUser(), mConversation));
         }
     }
 
