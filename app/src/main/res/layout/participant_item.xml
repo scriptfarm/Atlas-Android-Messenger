@@ -12,7 +12,9 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/layer_ui_padding_narrow"
         android:layout_marginLeft="@dimen/layer_ui_avatar_left_padding_user_list"
+        android:layout_marginStart="@dimen/layer_ui_avatar_left_padding_user_list"
         android:layout_marginRight="@dimen/layer_ui_avatar_right_padding_user_list"
+        android:layout_marginEnd="@dimen/layer_ui_avatar_right_padding_user_list"
         android:layout_marginTop="@dimen/layer_ui_padding_narrow">
 
         <com.layer.ui.avatar.AvatarView
@@ -46,6 +48,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:layout_marginRight="@dimen/layer_ui_padding_normal"
+        android:layout_marginEnd="@dimen/layer_ui_padding_normal"
         android:scaleType="center"
         android:src="@drawable/ic_block_white_24dp"
         android:tint="@color/layer_ui_icon_enabled"
