@@ -18,8 +18,10 @@ import com.layer.messenger.util.Log;
 import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.LayerQueryRequest;
+import com.layer.sdk.messaging.Channel;
 import com.layer.sdk.messaging.Conversation;
 import com.layer.sdk.messaging.Message;
+import com.layer.sdk.messaging.MessagingPattern;
 import com.layer.sdk.messaging.PushNotificationPayload;
 import com.layer.sdk.query.Predicate;
 import com.layer.sdk.query.Query;
@@ -224,8 +226,8 @@ public class PushNotificationReceiver extends BroadcastReceiver {
          * @param text    Notification text for added Message
          */
         protected void add(Context context, LayerClient layerClient, Message message, String text) {
-            Conversation conversation = message.getConversation();
-            String key = conversation.getId().toString();
+            MessagingPattern messagingPattern = message.getMessagingPattern();
+            String key = messagingPattern.getId().toString();
             long currentPosition = mPositions.getLong(key, Long.MIN_VALUE);
 
             // Ignore older messages
@@ -252,12 +254,12 @@ public class PushNotificationReceiver extends BroadcastReceiver {
                 }
                 return;
             }
-            update(context, layerClient, conversation, message);
+            update(context, layerClient, messagingPattern, message);
         }
 
-        private void update(Context context, LayerClient layerClient, Conversation conversation,
+        private void update(Context context, LayerClient layerClient, MessagingPattern messagingPattern,
                 Message message) {
-            String messagesString = mMessages.getString(conversation.getId().toString(), null);
+            String messagesString = mMessages.getString(messagingPattern.getId().toString(), null);
             if (messagesString == null) return;
 
             // Get current notification texts
@@ -285,8 +287,15 @@ public class PushNotificationReceiver extends BroadcastReceiver {
 
             // Construct notification
             // TODO We'd need to handle updates if the authenticated user isn't in the cache
-            String conversationTitle = Util.getConversationItemFormatter().getConversationTitle(layerClient.getAuthenticatedUserLive().getValue(), conversation);
 
+            String conversationTitle;
+            if (messagingPattern instanceof Channel) {
+                conversationTitle = ((Channel) messagingPattern).getName();
+            } else {
+                conversationTitle = Util.getConversationItemFormatter().getConversationTitle(layerClient.getAuthenticatedUserLive().getValue(),
+                        ((Conversation) messagingPattern));
+            }
+            
             NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle().setBigContentTitle(conversationTitle);
             int i;
             if (positions.size() <= MAX_MESSAGES) {
@@ -316,15 +325,15 @@ public class PushNotificationReceiver extends BroadcastReceiver {
                     .setStyle(inboxStyle);
 
             // Intent to launch when clicked
-            PendingIntent clickPendingIntent = createNotificationClickIntent(context, conversation.getId(), message.getId());
+            PendingIntent clickPendingIntent = createNotificationClickIntent(context, messagingPattern.getId(), message.getId());
             mBuilder.setContentIntent(clickPendingIntent);
 
             // Intent to launch when swiped out
-            PendingIntent deleteIntent = createNotificationDeleteIntent(context, conversation.getId(), message.getId());
+            PendingIntent deleteIntent = createNotificationDeleteIntent(context, messagingPattern.getId(), message.getId());
             mBuilder.setDeleteIntent(deleteIntent);
 
             // Show the notification
-            mManager.notify(conversation.getId().toString(), MESSAGE_ID, mBuilder.build());
+            mManager.notify(messagingPattern.getId().toString(), MESSAGE_ID, mBuilder.build());
         }
 
         private void notifyOnContentFailure(Context context, Uri conversationId, Uri messageId, String text) {

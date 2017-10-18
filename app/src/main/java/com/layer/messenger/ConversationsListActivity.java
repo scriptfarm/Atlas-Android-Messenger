@@ -14,6 +14,7 @@ import com.layer.messenger.databinding.ActivityConversationsListBinding;
 import com.layer.messenger.util.Log;
 import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
+import com.layer.sdk.messaging.Channel;
 import com.layer.sdk.messaging.Conversation;
 import com.layer.ui.adapters.ConversationItemsAdapter;
 import com.layer.ui.conversation.ConversationItemsListView;
@@ -83,8 +84,9 @@ public class ConversationsListActivity extends AppCompatActivity {
                                 conversation.delete(LayerClient.DeletionMode.ALL_PARTICIPANTS);
                             }
                         });
-                // User delete is only available if read receipts are enabled
-                if (conversation.isReadReceiptsEnabled()) {
+                // User delete is not available for channels
+                // TODO Change to MessagingPattern? (AND-1107)
+                if (!(conversation instanceof Channel)) {
                     builder.setNeutralButton(R.string.alert_button_delete_my_devices, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {

@@ -27,8 +27,8 @@ import com.layer.sdk.LayerDataObserver;
 import com.layer.sdk.LayerDataRequest;
 import com.layer.sdk.changes.LayerChange;
 import com.layer.sdk.changes.LayerChangeEvent;
+import com.layer.sdk.messaging.Channel;
 import com.layer.sdk.messaging.Conversation;
-import com.layer.sdk.messaging.ConversationOptions;
 import com.layer.sdk.messaging.ConversationType;
 import com.layer.sdk.messaging.Identity;
 import com.layer.sdk.messaging.LayerObject;
@@ -245,8 +245,8 @@ public class MessagesListActivity extends AppCompatActivity {
                                         message.delete(LayerClient.DeletionMode.ALL_PARTICIPANTS);
                                     }
                                 });
-                        // User delete is only available if read receipts are enabled
-                        if (message.getConversation().isReadReceiptsEnabled()) {
+                        // User delete is not available for channels
+                        if (!(message.getMessagingPattern() instanceof Channel)) {
                             builder.setNeutralButton(R.string.alert_button_delete_my_devices, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
@@ -281,8 +281,8 @@ public class MessagesListActivity extends AppCompatActivity {
                             setConversation(null, false);
                             return;
                         }
-                        setConversation(mLayerClient.newConversation(new ConversationOptions().type(
-                                ConversationType.DIRECT_MESSAGE_CONVERSATION),
+                        setConversation(mLayerClient.newConversation(
+                                ConversationType.DIRECT_MESSAGE_CONVERSATION,
                                 new HashSet<>(participants)), false);
                     }
                 })
@@ -341,7 +341,7 @@ public class MessagesListActivity extends AppCompatActivity {
             return;
         }
 
-        if (conversation.getHistoricSyncStatus() == Conversation.HistoricSyncStatus.INVALID) {
+        if (conversation.getTotalMessageCount() == 0) {
             // New "temporary" conversation
             setUiState(UiState.ADDRESS_COMPOSER);
         } else {
