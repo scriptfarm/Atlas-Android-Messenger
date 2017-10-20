@@ -30,7 +30,7 @@ import com.layer.sdk.changes.LayerChangeEvent;
 import com.layer.sdk.messaging.Conversation;
 import com.layer.sdk.messaging.Identity;
 import com.layer.sdk.messaging.LayerObject;
-import com.layer.sdk.messaging.Presence;
+import com.layer.sdk.messaging.PresenceStatus;
 import com.layer.sdk.query.Query;
 import com.layer.ui.avatar.AvatarView;
 import com.layer.ui.avatar.AvatarViewModelImpl;
@@ -192,7 +192,7 @@ public class AppSettingsActivity extends BaseActivity implements AuthenticationL
         // Setup Presence Spinner
         mPresenceSpinner.setOnItemSelectedListener(this);
         List<String> presenceStates = new ArrayList<>();
-        for (Presence.PresenceStatus status : Presence.PresenceStatus.values()) {
+        for (PresenceStatus status : PresenceStatus.values()) {
             if (status.isUserSettable()) {
                 presenceStates.add(status.toString());
             }
@@ -284,12 +284,14 @@ public class AppSettingsActivity extends BaseActivity implements AuthenticationL
         }
         // TODO connectivity visibility
 //        mUserState.setText(getLayerClient().isConnected() ? R.string.settings_content_connected : R.string.settings_content_disconnected);
-        // TODO presence support
-//        Presence.PresenceStatus currentStatus = getLayerClient().getPresenceStatus();
-//        if (currentStatus != null) {
-//            int spinnerPosition = mPresenceSpinnerDataAdapter.getPosition(currentStatus.toString());
-//            mPresenceSpinner.setSelection(spinnerPosition);
-//        }
+        if (mAuthenticatedUser != null) {
+            PresenceStatus currentStatus = mAuthenticatedUser.getPresenceStatus();
+            if (currentStatus != null) {
+                int spinnerPosition = mPresenceSpinnerDataAdapter
+                        .getPosition(currentStatus.toString());
+                mPresenceSpinner.setSelection(spinnerPosition);
+            }
+        }
 
         /* Notifications */
         mShowNotifications.setChecked(PushNotificationReceiver.getNotifications(this).isEnabled());
@@ -406,11 +408,10 @@ public class AppSettingsActivity extends BaseActivity implements AuthenticationL
         if (!getLayerClient().isAuthenticated()) return;
 
         String newSelection = mPresenceSpinnerDataAdapter.getItem(position).toString();
-        Presence.PresenceStatus newStatus = Presence.PresenceStatus.valueOf(newSelection);
-        // TODO presence support
-//        if (getLayerClient().isAuthenticated()) {
-//            getLayerClient().setPresenceStatus(newStatus);
-//        }
+        PresenceStatus newStatus = PresenceStatus.valueOf(newSelection);
+        if (getLayerClient().isAuthenticated()) {
+            getLayerClient().setPresenceStatus(newStatus);
+        }
 
         // Local changes don't raise change notifications. So, refresh manually
         mPresenceView.invalidate();
