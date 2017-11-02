@@ -16,7 +16,8 @@ ext {
 
 allprojects {
     repositories {
-        maven { url "https://raw.githubusercontent.com/layerhq/releases-android/master/releases/" }
+        maven { url "/Users/archit/.gitRepos/layerhq/releases-android/releases/" }
+        maven { url "https://maven.google.com" }
         jcenter()
     }
 }
