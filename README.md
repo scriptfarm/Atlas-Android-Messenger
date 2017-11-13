@@ -23,7 +23,7 @@ Run `git submodule update --init` to initialize and pull in the [Atlas-Android](
 Atlas Messenger uses the `AuthenticationProvider` interface to authenticate with various backends.  Additional identity providers can integrate with Atlas Messenger by implementing `AuthenticationProvider` and using a custom login Activity.
 
 ### <a name="provider"></a> Provider
-To use the sample app, you need to register your app on the [Dashboard] (https://developer.layer.com) and follow the guide to deploy the [Sample Identity Provider](https://github.com/layerhq/layer-identity-provider) backend on Heroku. In assets/LayerConfiguration.json, update the "name" and "app_id" to the values displayed on the dashboard; update the "identity_provider_url" to the URL of the sample app you deployed on Heroku.
+To use the sample app, you need to register your app on the [Dashboard](https://developer.layer.com) and follow the guide to deploy the [Sample Identity Provider](https://github.com/layerhq/instastart-identity-provider) backend on Heroku. In assets/LayerConfiguration.json, update the "name" and "app_id" to the values displayed on the dashboard; update the "identity_provider_url" to the URL of the sample app you deployed on Heroku.
 
 `[
   {
@@ -33,7 +33,7 @@ To use the sample app, you need to register your app on the [Dashboard] (https:/
   }
 ]`
 
-Learn more about the authentication flow [here] (https://docs.layer.com/sdk/android/authentication).
+Learn more about the authentication flow [here](https://docs.layer.com/sdk/android/authentication).
 
 ### <a name="pushnotifications"></a>Push Notifications
 
