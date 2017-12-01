@@ -9,10 +9,9 @@ android {
         applicationId "com.layer.messenger"
         minSdkVersion 14
         targetSdkVersion 24
-        versionCode 76
+        versionCode 77
         versionName "$versionCode"
         testInstrumentationRunner 'com.layer.messenger.testrunner.TestButlerRunner'
-
     }
 
     lintOptions {
@@ -20,6 +19,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            minifyEnabled false
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -37,6 +39,8 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+
+    debugCompile 'com.facebook.stetho:stetho:1.5.0'
 
     testCompile 'junit:junit:4.12'
 
