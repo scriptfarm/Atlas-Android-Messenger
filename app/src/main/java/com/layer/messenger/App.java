@@ -6,14 +6,13 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.StrictMode;
 
-import com.facebook.stetho.Stetho;
 import com.layer.atlas.messagetypes.text.TextCellFactory;
 import com.layer.atlas.messagetypes.threepartimage.ThreePartImageUtils;
 import com.layer.atlas.util.Util;
 import com.layer.atlas.util.picasso.requesthandlers.MessagePartRequestHandler;
-import com.layer.messenger.util.LayerAuthenticationProvider;
-import com.layer.messenger.util.CustomEndpoint;
 import com.layer.messenger.util.AuthenticationProvider;
+import com.layer.messenger.util.CustomEndpoint;
+import com.layer.messenger.util.LayerAuthenticationProvider;
 import com.layer.messenger.util.Log;
 import com.layer.sdk.LayerClient;
 import com.squareup.picasso.Picasso;
@@ -23,6 +22,7 @@ import java.util.Arrays;
 /**
  * App provides static access to a LayerClient and other Atlas and Messenger context, including
  * AuthenticationProvider, ParticipantProvider, Participant, and Picasso.
+ *
  * @see LayerClient
  * @see Picasso
  * @see AuthenticationProvider
@@ -54,8 +54,6 @@ public class App extends Application {
             com.layer.messenger.util.Log.setAlwaysLoggable(true);
             LayerClient.setLoggingEnabled(this, true);
             LayerClient.setPrivateLoggingEnabled(true);
-
-            Stetho.initializeWithDefaults(this);
 
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                     .detectAll()
@@ -146,6 +144,7 @@ public class App extends Application {
      * Gets or creates a LayerClient, using a default set of LayerClient.Options
      * App ID and Options from the `generateLayerClient` method.  Returns `null` if the App was
      * unable to create a LayerClient (due to no App ID, etc.). Set App Id {@link App.LAYER_APP_ID}
+     *
      * @return New or existing LayerClient, or `null` if a LayerClient could not be constructed.
      */
     public static LayerClient getLayerClient() {
@@ -154,8 +153,7 @@ public class App extends Application {
             SharedPreferences sharedPreferences = sInstance.getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
             if (sharedPreferences.contains(SHARED_PREFS_KEY_TELEMETRY_ENABLED)) {
                 telemetryEnabled = sharedPreferences.getBoolean(SHARED_PREFS_KEY_TELEMETRY_ENABLED, true);
-            }
-            else {
+            } else {
                 sharedPreferences.edit().putBoolean(SHARED_PREFS_KEY_TELEMETRY_ENABLED, true).apply();
                 telemetryEnabled = true;
             }
