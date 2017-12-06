@@ -35,9 +35,9 @@ import com.layer.ui.conversation.ConversationView;
 import com.layer.ui.conversation.ConversationViewModel;
 import com.layer.ui.message.MessageItemsListViewModel;
 import com.layer.ui.message.messagetypes.location.LocationSender;
-import com.layer.ui.message.messagetypes.text.TextSender;
 import com.layer.ui.message.messagetypes.threepartimage.CameraSender;
 import com.layer.ui.message.messagetypes.threepartimage.GallerySender;
+import com.layer.ui.message.text.RichTextSender;
 import com.layer.ui.util.views.SwipeableItem;
 
 import java.util.HashSet;
@@ -194,7 +194,7 @@ public class MessagesListActivity extends AppCompatActivity {
 
     private void setupComposeBar() {
         mComposeBar = mActivityMessagesListBinding.conversation.getComposeBar();
-        mComposeBar.setTextSender(new TextSender(this, App.getLayerClient()));
+        mComposeBar.setTextSender(new RichTextSender(this, App.getLayerClient()));
         mComposeBar.addAttachmentSendersToDefaultAttachmentButton(
                 new CameraSender(R.string.attachment_menu_camera,
                         R.drawable.ic_photo_camera_white_24dp, this, App.getLayerClient(),

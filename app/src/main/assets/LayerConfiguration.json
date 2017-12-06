@@ -1,7 +1,107 @@
 [
   {
-    "name": null,
-    "app_id": null,
-    "identity_provider_url": null
+    "name": "Prod1-Staging",
+    "app_id": "layer:///apps/staging/9ec30af8-5591-11e4-af9e-f7a201004a3b",
+    "identity_provider_url": "http://layer-identity-provider.herokuapp.com/users/sign_in.json",
+    "platform": {
+      "url": "https://api.layer.com/apps",
+      "token": "ecbqFMoUasP7OcpK7anHbW5vmrBYmUvxG6gy7upQoDE008rc"
+    },
+    "endpoint": {
+      "conf": "https://conf.lyr8.net/conf",
+      "cert": "https://certs.lyr8.net/certificates",
+      "auth": "https://sync.lyr8.net",
+      "sync": "https://sync.lyr8.net/",
+      "telemetry": "https://telemetry.layer.com/"
+    }
+  },
+  {
+    "name": "Stage1-Staging",
+    "app_id": "layer:///apps/staging/b38b1fe2-4302-11e6-8f67-43ae000000b4",
+    "identity_provider_url": "http://layer-identity-provider.herokuapp.com/users/sign_in.json",
+    "platform": {
+      "url": "https://staging-preview-api.layer.com/apps",
+      "token": "anlUebJi8INNVrsbDaqj3FHa0seHluZ1DUubdP5U53EAECcP"
+    },
+    "endpoint": {
+      "conf": "https://conf-trusted.stage1.lyr8.net/conf",
+      "cert": "https://certs.stage1.lyr8.net/certificates",
+      "auth": "https://sync.stage1.lyr8.net",
+      "sync": "https://sync.stage1.lyr8.net/",
+      "telemetry": "https://staging-telemetry.layer.com/"
+    }
+  },
+  {
+    "name": "Stage1-Production",
+    "app_id": "layer:///apps/production/b38b200a-4302-11e6-8f67-43ae000000b4",
+    "identity_provider_url": "http://layer-identity-provider.herokuapp.com/users/sign_in.json",
+    "platform": {
+      "url": "https://staging-preview-api.layer.com/apps",
+      "token": "LwXM8CR2wVOfZPHZ7zBEsAxvwkja2TKep6A63rTnMUObEt1g"
+    },
+    "endpoint": {
+      "conf": "https://conf-trusted.stage1.lyr8.net/conf",
+      "cert": "https://certs.stage1.lyr8.net/certificates",
+      "auth": "https://sync.stage1.lyr8.net",
+      "sync": "https://sync.stage1.lyr8.net/",
+      "telemetry": "https://staging-telemetry.layer.com/"
+    }
+  },
+  {
+    "name": "PushTest-Prod-Amar",
+    "app_id": "layer:///apps/staging/a6a976f2-08ba-11e6-b294-424d000047e5",
+    "identity_provider_url": "http://layer-identity-provider.herokuapp.com/users/sign_in.json",
+    "platform": {
+      "url": "https://api.layer.com/apps",
+      "token": "ARmLFeMGfopU4xSZB3NJ56wajrlCE8WzbqkYX2idQTHvDtPn"
+    },
+    "endpoint": {
+      "conf": "https://conf.lyr8.net/conf",
+      "cert": "https://certs.lyr8.net/certificates",
+      "auth": "https://sync.lyr8.net",
+      "sync": "https://sync.lyr8.net/",
+      "telemetry": "https://staging-telemetry.layer.com/"
+    }
+  },
+  {
+    "name": "Benchmark A",
+    "app_id": "layer:///apps/production/dc05d468-a774-11e6-8bcc-6eed000024f3",
+    "identity_provider_url": "http://layer-identity-provider.herokuapp.com/users/sign_in.json",
+    "platform": {
+      "url": "https://staging-preview-api.layer.com/apps",
+      "token": "LwXM8CR2wVOfZPHZ7zBEsAxvwkja2TKep6A63rTnMUObEt1g"
+    },
+    "endpoint": {
+      "conf": "https://conf-trusted.stage1.lyr8.net/conf",
+      "cert": "https://certs.stage1.lyr8.net/certificates",
+      "auth": "https://sync.stage1.lyr8.net",
+      "sync": "https://sync.stage1.lyr8.net/",
+      "telemetry": "https://staging-telemetry.layer.com/"
+    }
+  },
+  {
+    "name": "Instastart test",
+    "app_id": "layer:///apps/staging/c2be05ee-ee31-11e6-8c46-71213f036357",
+    "identity_provider_url": "https://messenger-identity-provider.herokuapp.com/authenticate"
+  },
+  {
+    "name":"Messaging 2.0 Sample",
+    "app_id":"layer:///apps/staging/2f1707c0-fd2f-11e6-ae72-c27751092ce1",
+    "identity_provider_url":"https://layer-quickstart-michael.herokuapp.com/authenticate"
+  },
+  {
+    "name": "paytm",
+    "app_id": "layer:///apps/production/34e64306-9d74-11e7-8a07-f44e000000d9",
+    "identity_provider_url": "http://layer-identity-provider.herokuapp.com/users/sign_in.json",
+    "platform": {
+      "url": "https://api-paytm.layer.com/apps",
+      "token": "ecbqFMoUasP7OcpK7anHbW5vmrBYmUvxG6gy7upQoDE008rc"
+    },
+    "endpoint": {
+      "conf": "https://conf-paytm.lyr8.net/conf",
+      "cert": "https://certs-paytm.lyr8.net/certificates",
+      "auth": "https://sync-paytm.lyr8.net",
+      "sync": "https://sync-paytm.lyr8.net/"
+    }
   }
 ]
