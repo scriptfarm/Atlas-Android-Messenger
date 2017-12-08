@@ -21,7 +21,7 @@
 
     </com.layer.atlas.AtlasHistoricMessagesFetchLayout>
 
-    <com.layer.atlas.AtlasMessageComposer
+    <com.layer.atlas.tenor.TenorMessageComposer
         android:id="@+id/message_composer"
         android:layout_width="match_parent"
         android:minHeight="48dp"

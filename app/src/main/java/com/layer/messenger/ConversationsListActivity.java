@@ -13,6 +13,7 @@ import com.layer.atlas.messagetypes.location.LocationCellFactory;
 import com.layer.atlas.messagetypes.singlepartimage.SinglePartImageCellFactory;
 import com.layer.atlas.messagetypes.text.TextCellFactory;
 import com.layer.atlas.messagetypes.threepartimage.ThreePartImageCellFactory;
+import com.layer.atlas.tenor.messagetype.threepartgif.ThreePartGifCellFactory;
 import com.layer.atlas.util.views.SwipeableItem;
 import com.layer.messenger.util.Log;
 import com.layer.sdk.LayerClient;
@@ -58,7 +59,8 @@ public class ConversationsListActivity extends BaseActivity {
                 .addCellFactories(new TextCellFactory(),
                         new ThreePartImageCellFactory(getLayerClient(), getPicasso()),
                         new SinglePartImageCellFactory(getLayerClient(), getPicasso()),
-                        new LocationCellFactory(getPicasso()))
+                        new LocationCellFactory(getPicasso()),
+                        new ThreePartGifCellFactory(getLayerClient(), getGifLoaderClient()))
                 .setOnConversationSwipeListener(new SwipeableItem.OnSwipeListener<Conversation>() {
                     @Override
                     public void onSwipe(final Conversation conversation, int direction) {

@@ -43,6 +43,9 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     androidTestCompile "com.linkedin.testbutler:test-butler-library:$versions.testButler"
+    compile 'com.github.bumptech.glide:glide:3.8.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.3.0'
+    compile (project(':tenor-android-core'))
 }
 
 apply plugin: 'com.google.gms.google-services'

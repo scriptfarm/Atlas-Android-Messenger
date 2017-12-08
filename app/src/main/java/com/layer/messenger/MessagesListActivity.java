@@ -15,7 +15,6 @@ import android.widget.TextView;
 
 import com.layer.atlas.AtlasAddressBar;
 import com.layer.atlas.AtlasHistoricMessagesFetchLayout;
-import com.layer.atlas.AtlasMessageComposer;
 import com.layer.atlas.AtlasMessagesRecyclerView;
 import com.layer.atlas.AtlasTypingIndicator;
 import com.layer.atlas.messagetypes.generic.GenericCellFactory;
@@ -29,6 +28,7 @@ import com.layer.atlas.messagetypes.threepartimage.GallerySender;
 import com.layer.atlas.messagetypes.threepartimage.ThreePartImageCellFactory;
 import com.layer.atlas.typingindicators.BubbleTypingIndicatorFactory;
 import com.layer.atlas.util.views.SwipeableItem;
+import com.layer.messenger.tenor.GifRecyclerView;
 import com.layer.messenger.util.Util;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.changes.LayerChange;
@@ -40,6 +40,10 @@ import com.layer.sdk.messaging.ConversationOptions;
 import com.layer.sdk.messaging.Identity;
 import com.layer.sdk.messaging.LayerObject;
 import com.layer.sdk.messaging.Message;
+import com.layer.atlas.tenor.TenorMessageComposer;
+import com.layer.atlas.tenor.messagetype.threepartgif.GifSender;
+import com.layer.atlas.tenor.messagetype.threepartgif.ThreePartGifCellFactory;
+import com.layer.atlas.tenor.util.GifSearchQueryClerk;
 
 import java.util.HashSet;
 import java.util.List;
@@ -52,7 +56,7 @@ public class MessagesListActivity extends BaseActivity {
     private AtlasHistoricMessagesFetchLayout mHistoricFetchLayout;
     private AtlasMessagesRecyclerView mMessagesList;
     private AtlasTypingIndicator mTypingIndicator;
-    private AtlasMessageComposer mMessageComposer;
+    private TenorMessageComposer mMessageComposer;
     private IdentityChangeListener mIdentityChangeListener;
 
     public MessagesListActivity() {
@@ -100,6 +104,8 @@ public class MessagesListActivity extends BaseActivity {
             if (!isFinishing()) finish();
             return;
         }
+
+        GifSearchQueryClerk.get().clear();
 
         mAddressBar = ((AtlasAddressBar) findViewById(R.id.conversation_launcher))
                 .init(getLayerClient(), getPicasso())
@@ -162,6 +168,7 @@ public class MessagesListActivity extends BaseActivity {
                 .init(getLayerClient(), getPicasso())
                 .addCellFactories(
                         new TextCellFactory(),
+                        new ThreePartGifCellFactory(getLayerClient(), getGifLoaderClient()),
                         new ThreePartImageCellFactory(this, getLayerClient(), getPicasso()),
                         new LocationCellFactory(this, getPicasso()),
                         new SinglePartImageCellFactory(this, getLayerClient(), getPicasso()),
@@ -209,9 +216,10 @@ public class MessagesListActivity extends BaseActivity {
                     }
                 });
 
-        mMessageComposer = ((AtlasMessageComposer) findViewById(R.id.message_composer))
-                .init(getLayerClient())
+        mMessageComposer = ((TenorMessageComposer) findViewById(R.id.message_composer))
+                .init(getLayerClient(), getGifLoaderClient(), new GifRecyclerView(this))
                 .setTextSender(new TextSender())
+                .setGifSender(new GifSender(R.string.attachment_menu_gif, R.drawable.ic_logo_white, this))
                 .addAttachmentSenders(
                         new CameraSender(R.string.attachment_menu_camera,
                                 R.drawable.ic_photo_camera_white_24dp, this,

@@ -7,6 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.layer.sdk.LayerClient;
+import com.layer.atlas.tenor.messagetype.gif.GifLoaderClient;
 import com.squareup.picasso.Picasso;
 
 public abstract class BaseActivity extends AppCompatActivity {
@@ -83,6 +84,10 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected LayerClient getLayerClient() {
         return App.getLayerClient();
+    }
+
+    protected GifLoaderClient getGifLoaderClient() {
+        return App.getGifLoaderClient();
     }
 
     protected Picasso getPicasso() {
