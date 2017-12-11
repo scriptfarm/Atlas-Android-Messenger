@@ -12,7 +12,7 @@ import com.layer.messenger.util.LayerAuthenticationProvider;
 import com.layer.messenger.util.Log;
 import com.layer.sdk.LayerClient;
 import com.layer.ui.message.messagetypes.text.TextCellFactory;
-import com.layer.ui.message.messagetypes.threepartimage.ThreePartImageUtils;
+import com.layer.ui.message.messagetypes.threepartimage.ThreePartImageConstants;
 import com.layer.ui.util.Util;
 import com.layer.ui.util.imagecache.requesthandlers.MessagePartRequestHandler;
 import com.squareup.picasso.Picasso;
@@ -168,8 +168,8 @@ public class App extends Application {
                     /* Automatically download text and ThreePartImage info/preview */
                     .autoDownloadMimeTypes(Arrays.asList(
                             TextCellFactory.MIME_TYPE,
-                            ThreePartImageUtils.MIME_TYPE_INFO,
-                            ThreePartImageUtils.MIME_TYPE_PREVIEW))
+                            ThreePartImageConstants.MIME_TYPE_INFO,
+                            ThreePartImageConstants.MIME_TYPE_PREVIEW))
                     .setTelemetryEnabled(telemetryEnabled);
 
             sLayerClient = generateLayerClient(sInstance, options);
