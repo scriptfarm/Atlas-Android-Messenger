@@ -10,6 +10,7 @@ checkout:
   post:
     - git submodule sync
     - git submodule update --init
+
     - eval "$DUMMY_GOOGLE_SERVICES_JSON_CONFIG"
 
 dependencies:
