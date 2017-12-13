@@ -10,7 +10,9 @@ checkout:
   post:
     - git submodule sync
     - git submodule update --init
-    - eval "$DUMMY_GOOGLE_SERVICES_JSON_CONFIG"
+  commands:
+    - mkdir -p ./app/src/debug/
+    - chmod 0755 ./generate-json.sh && ./generate-json.sh
 
 dependencies:
   pre:
