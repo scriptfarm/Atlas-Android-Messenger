@@ -34,6 +34,7 @@ import com.layer.ui.composebar.ComposeBar;
 import com.layer.ui.conversation.ConversationView;
 import com.layer.ui.conversation.ConversationViewModel;
 import com.layer.ui.message.MessageItemsListViewModel;
+import com.layer.ui.message.location.CurrentLocationSender;
 import com.layer.ui.message.messagetypes.location.LocationSender;
 import com.layer.ui.message.messagetypes.threepartimage.CameraSender;
 import com.layer.ui.message.messagetypes.threepartimage.GallerySender;
@@ -200,7 +201,9 @@ public class MessagesListActivity extends AppCompatActivity {
                         R.drawable.ic_photo_camera_white_24dp, this, App.getLayerClient(),
                         getApplicationContext().getPackageName() + ".file_provider"),
                 new GallerySender(R.string.attachment_menu_gallery, R.drawable.ic_photo_white_24dp, this, App.getLayerClient()),
-                new LocationSender(R.string.attachment_menu_location, R.drawable.ic_place_white_24dp, this, App.getLayerClient()));
+                new CurrentLocationSender(R.string.attachment_menu_current_location,
+                        R.drawable.ic_place_white_24dp, this, App.getLayerClient(),
+                        Util.getIdentityFormatter(this)));
 
         mComposeBar.setOnMessageEditTextFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
