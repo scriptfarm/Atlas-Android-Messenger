@@ -25,9 +25,7 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class Util {
     private static ConversationItemFormatter sConversationItemFormatter;
@@ -40,7 +38,9 @@ public class Util {
         DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
         DateFormat timeFormat = android.text.format.DateFormat.getTimeFormat(context);
         sImageCacheWrapper = new PicassoImageCacheWrapper(picasso);
-        sConversationItemFormatter = new ConversationItemFormatter(context, timeFormat, dateFormat, getCellFactories(layerClient));
+        sConversationItemFormatter = new ConversationItemFormatter(context, layerClient,
+                getIdentityFormatter(context), timeFormat, dateFormat,
+                getCellFactories(layerClient));
     }
 
     public static ConversationItemFormatter getConversationItemFormatter() {
