@@ -2,6 +2,10 @@
 
 Atlas Messenger is a fully-featured messaging app following [Material Design guidelines](https://www.google.com/design/spec/material-design/introduction.html#introduction-goals), built on top of the [Layer SDK](https://layer.com/), using the [Atlas UI toolkit](https://github.com/layerhq/Atlas-Android).
 
+## <a name="just_starting"></a>Just Starting?
+
+Use our new XDK Messenger! The XDK Messenger enables a richer messaging experience and new features will be added there. See the repository at https://github.com/layerhq/Android-XDK-Messenger. Don't worry, Atlas-Android-Messenger will still be supported in the meantime.
+
 ## <a name="setup"></a>Setup
 
 Run `git submodule update --init` to initialize and pull in the [Atlas-Android](https://github.com/layerhq/Atlas-Android) submodule.
