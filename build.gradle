@@ -18,6 +18,10 @@ allprojects {
     repositories {
         maven { url "https://raw.githubusercontent.com/layerhq/releases-android/master/releases/" }
         jcenter()
+        maven {
+            url 'https://maven.google.com/'
+            name 'Google'
+        }
     }
 }
 

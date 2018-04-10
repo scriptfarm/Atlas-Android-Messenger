@@ -2,13 +2,13 @@ apply plugin: 'com.android.application'
 apply from: "$rootDir/tools/tools.gradle"
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion '25.0.2'
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         applicationId "com.layer.messenger"
         minSdkVersion 14
-        targetSdkVersion 24
+        targetSdkVersion 27
         versionCode 79
         versionName "$versionCode"
         testInstrumentationRunner 'com.layer.messenger.testrunner.TestButlerRunner'
@@ -35,7 +35,7 @@ dependencies {
     // All flavors
     compile project(':layer-atlas')
 
-    compile "com.google.firebase:firebase-messaging:10.2.0"
+    compile "com.google.firebase:firebase-messaging:11.8.0"
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
